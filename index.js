@@ -82,7 +82,7 @@ function animate() {
   MapBackground.draw();
   Player.draw(c, canvas);
   MapBackground2.draw();
-
+  // CollisionMap.draw();
   //Bewegung des Spielers
   let currentDirection = getCurrentDirection();
   if (currentDirection == "UP" && CollisionUP == false) {
