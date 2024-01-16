@@ -2,4 +2,35 @@ body {
   background-color: black;
   display: flex;
   justify-content: center;
+  font-family: "Roboto", sans-serif;
+}
+
+.inventory {
+  color: white;
+  margin-left: 2rem;
+}
+
+.inventory-items {
+  display: grid;
+  flex-wrap: wrap;
+}
+
+.inventory-item-name {
+  font-size: larger;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  margin: 10px;
+}
+
+.inventory-item {
+  color: white;
+  display: flex;
+  align-items: flex-start;
+  border: 1px solid white;
+  padding: 20px;
+  margin: 10px;
+  flex-direction: column;
 }

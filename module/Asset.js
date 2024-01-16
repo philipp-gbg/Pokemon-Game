@@ -11,6 +11,20 @@ export class MapConstructor {
   }
 }
 
+export class PokemonConstructor {
+  constructor({ name, health, level, type, attacks, src }) {
+    this.name = name;
+    this.health = health;
+    this.level = level;
+    this.type = type;
+    this.attacks = attacks;
+    this.src = src;
+  }
+  draw(positionX, positionY) {
+    c.drawImage(this.src, positionX, positionY);
+  }
+}
+
 export class PlayerConstructor {
   constructor({ position, src, inventory, velocity }) {
     this.position = position;
