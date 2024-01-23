@@ -38,21 +38,35 @@ export class PlayerConstructor {
     this.frameCount = 0; // Add this line
   }
 
-  draw(c, canvas) {
+  draw(c, canvas, fight) {
     const Scale = 1.5;
     const frameWidth = this.src.width / 4;
     const frameHeight = this.src.height;
-    c.drawImage(
-      this.src,
-      frameWidth * this.frameIndex,
-      0,
-      frameWidth,
-      frameHeight,
-      canvas.width / 2 - (frameWidth / 5) * Scale,
-      canvas.height / 2 - frameHeight * Scale,
-      frameWidth * Scale,
-      frameHeight * Scale
-    );
+    if (!fight) {
+      c.drawImage(
+        this.src,
+        frameWidth * this.frameIndex,
+        0,
+        frameWidth,
+        frameHeight,
+        canvas.width / 2 - (frameWidth / 5) * Scale,
+        canvas.height / 2 - frameHeight * Scale,
+        frameWidth * Scale,
+        frameHeight * Scale
+      );
+    } else {
+      c.drawImage(
+        this.src,
+        frameWidth * this.frameIndex,
+        0,
+        frameWidth,
+        frameHeight,
+        canvas.width / 2 + 100 - (frameWidth / 5) * Scale,
+        canvas.height - 300 - frameHeight * Scale,
+        frameWidth * Scale,
+        frameHeight * Scale
+      );
+    }
   }
 
   move() {

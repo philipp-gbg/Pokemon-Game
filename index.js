@@ -1,47 +1,26 @@
 import { MapConstructor, PlayerConstructor } from "./module/Asset.js";
-import { fillInventory, displayInventory } from "./module/Inventory.js";
+import {
+  fillInventory,
+  displayInventory,
+  PokemonList,
+} from "./module/Inventory.js";
 
-//Alle Karten Elemente Laden
+// Canvas setup
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 const c = canvas.getContext("2d", { willReadFrequently: true });
-
-const SpawnPosition = {
-  x: -575,
-  y: -1000,
-};
-
-const MapBackground = new MapConstructor({
-  position: {
-    x: SpawnPosition.x,
-    y: SpawnPosition.y,
-  },
-  src: document.getElementById("Map"),
-});
-
-const MapBackground2 = new MapConstructor({
-  position: {
-    x: SpawnPosition.x,
-    y: SpawnPosition.y,
-  },
-  src: document.getElementById("MapTransperent"),
-});
-
-const CollisionMap = new MapConstructor({
-  position: {
-    x: SpawnPosition.x,
-    y: SpawnPosition.y,
-  },
-  src: document.getElementById("CollisionMap"),
-});
 
 //Alle Spieler Elemente Laden
 const PlayerDown = document.getElementById("PlayerDown");
 const PlayerUp = document.getElementById("PlayerUp");
 const PlayerLeft = document.getElementById("PlayerLeft");
 const PlayerRight = document.getElementById("PlayerRight");
-
+let XpMessage = 0;
+let done = false;
+let Turn = 0;
+let selectedPokemon = 0;
+let directionStack = [];
 const Player = new PlayerConstructor({
   position: {
     position: {
@@ -57,8 +36,29 @@ const Player = new PlayerConstructor({
 console.log(Player.inventory);
 //function to display inventory
 displayInventory(Player);
+// index.js
 
-let directionStack = [];
+import { setupButtons, drawButtons } from "./module/Button.js";
+let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+  canvas,
+  Player,
+  selectedPokemon
+);
+let Set = 1;
+let enemyPokemon = {};
+//karten Setup
+function createMap(Name, Position) {
+  return new MapConstructor({
+    position: { ...Position },
+    src: document.getElementById(Name),
+  });
+}
+
+const SpawnPosition = { x: -575, y: -1000 };
+const MapBackground = createMap("Map", SpawnPosition);
+const MapBackground2 = createMap("MapTransperent", SpawnPosition);
+const CollisionMap = createMap("CollisionMap", SpawnPosition);
+const KampfMap = createMap("KampfMap", { x: 0, y: 0 });
 
 //Alle Farben für die Kollisionserkennung
 const Wand = [255, 0, 0, 255]; // ROT
@@ -72,87 +72,145 @@ const LowerY = canvas.height / 2 + 2;
 
 //Frame Counter für die Pokemon Encounter Erkennung
 let frameCount = 0;
+let PokemonKampf = true;
 
 //Spiel Loop
 function animate() {
   window.requestAnimationFrame(animate);
-  CollisionMap.draw();
-
-  //Pokemon Encounter Erkennung
-  PokemonEncounterFunction();
-  //Kollisions Erkennung
-
-  let CollisionUP = Collision(
-    [
-      [LeftX + 10, UpperY],
-      [RightX - 10, UpperY],
-    ],
-    Wand
-  );
-  let CollisionDown = Collision(
-    [
-      [LeftX + 10, LowerY],
-      [RightX - 10, LowerY],
-    ],
-    Wand
-  );
-  let CollisionLeft = Collision(
-    [
-      [LeftX, UpperY + 10],
-      [LeftX, LowerY - 10],
-    ],
-    Wand
-  );
-  let CollisionRight = Collision(
-    [
-      [RightX, UpperY + 10],
-      [RightX, LowerY - 10],
-    ],
-    Wand
-  );
-
-  //Rest der Karte gezeichnet sowie der Spieler
-  MapBackground.draw();
-  Player.draw(c, canvas);
-  MapBackground2.draw();
-  CollisionMap.draw();
-
-  //Bewegung des Spielers
-  let currentDirection = getCurrentDirection();
-  if (currentDirection == "UP" && CollisionUP == false) {
-    MapBackground.position.y += Player.velocity;
-    MapBackground2.position.y += Player.velocity;
-    CollisionMap.position.y += Player.velocity;
+  if (PokemonKampf == true) {
+    KampfMap.draw();
     Player.src = PlayerUp;
-    Player.move();
-    frameCount++;
-  }
-  if (currentDirection == "DOWN" && CollisionDown == false) {
-    MapBackground.position.y -= Player.velocity;
-    MapBackground2.position.y -= Player.velocity;
-    CollisionMap.position.y -= Player.velocity;
-    Player.src = PlayerDown;
-    Player.move();
-    frameCount++;
-  }
-  if (currentDirection == "LEFT" && CollisionLeft == false) {
-    MapBackground.position.x += Player.velocity;
-    MapBackground2.position.x += Player.velocity;
-    CollisionMap.position.x += Player.velocity;
-    Player.src = PlayerLeft;
-    Player.move();
-    frameCount++;
-  }
-  if (currentDirection == "RIGHT" && CollisionRight == false) {
-    MapBackground.position.x -= Player.velocity;
-    MapBackground2.position.x -= Player.velocity;
-    CollisionMap.position.x -= Player.velocity;
-    Player.src = PlayerRight;
-    Player.move();
-    frameCount++;
-  }
-  if (currentDirection == null) {
-    Player.Stop();
+    Player.draw(c, canvas, true);
+    drawButtons(
+      c,
+      canvas,
+      Buttons,
+      ButtonText,
+      Set,
+      currentPokemon,
+      enemyPokemon
+    );
+    if (enemyPokemon.health <= 0) {
+      if (done == false) {
+        console.log("Du hast gewonnen");
+        XpMessage = GainXP();
+      }
+      c.fillStyle = "white";
+      c.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
+      c.strokeRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
+      c.fillStyle = "black";
+      c.fillText(
+        "Du hast gewonnen",
+        canvas.width / 2 - 200,
+        canvas.height / 2 - 110
+      );
+      c.fillText(
+        "Du hast " + XpMessage + " XP erhalten",
+        canvas.width / 2 - 200,
+        canvas.height / 2 - 70
+      );
+      done = true;
+      setTimeout(function () {
+        PokemonKampf = false;
+      }, 5000);
+    }
+
+    canvas.addEventListener("click", function (event) {
+      if (Set == 1 && Turn == 0) {
+        if (getClickedButtonIndex(event) == 1) {
+          Turn = 1;
+          console.log("Angiff 1");
+          DamageEnemyPokemon(Attacks[0].damage);
+          Turn = 1;
+        }
+        if (getClickedButtonIndex(event) == 2) {
+          Turn = 1;
+          console.log("Angiff 2");
+          DamageEnemyPokemon(Attacks[1].damage);
+          Turn = 1;
+        }
+      }
+    });
+
+    // Add the event listener
+  } else {
+    CollisionMap.draw();
+    //Pokemon Encounter Erkennung
+    PokemonEncounterFunction();
+    //Kollisions Erkennung
+
+    let CollisionUP = Collision(
+      [
+        [LeftX + 10, UpperY],
+        [RightX - 10, UpperY],
+      ],
+      Wand
+    );
+    let CollisionDown = Collision(
+      [
+        [LeftX + 10, LowerY],
+        [RightX - 10, LowerY],
+      ],
+      Wand
+    );
+    let CollisionLeft = Collision(
+      [
+        [LeftX, UpperY + 10],
+        [LeftX, LowerY - 10],
+      ],
+      Wand
+    );
+    let CollisionRight = Collision(
+      [
+        [RightX, UpperY + 10],
+        [RightX, LowerY - 10],
+      ],
+      Wand
+    );
+
+    //Rest der Karte gezeichnet sowie der Spieler
+    MapBackground.draw();
+    Player.draw(c, canvas);
+    MapBackground2.draw();
+    CollisionMap.draw();
+
+    //Bewegung des Spielers
+    let currentDirection = getCurrentDirection();
+    if (currentDirection == "UP" && CollisionUP == false) {
+      MapBackground.position.y += Player.velocity;
+      MapBackground2.position.y += Player.velocity;
+      CollisionMap.position.y += Player.velocity;
+      Player.src = PlayerUp;
+      Player.move();
+      frameCount++;
+    }
+    if (currentDirection == "DOWN" && CollisionDown == false) {
+      MapBackground.position.y -= Player.velocity;
+      MapBackground2.position.y -= Player.velocity;
+      CollisionMap.position.y -= Player.velocity;
+      Player.src = PlayerDown;
+      Player.move();
+      frameCount++;
+    }
+    if (currentDirection == "LEFT" && CollisionLeft == false) {
+      MapBackground.position.x += Player.velocity;
+      MapBackground2.position.x += Player.velocity;
+      CollisionMap.position.x += Player.velocity;
+      Player.src = PlayerLeft;
+      Player.move();
+      frameCount++;
+    }
+    if (currentDirection == "RIGHT" && CollisionRight == false) {
+      MapBackground.position.x -= Player.velocity;
+      MapBackground2.position.x -= Player.velocity;
+      CollisionMap.position.x -= Player.velocity;
+      Player.src = PlayerRight;
+      Player.move();
+      frameCount++;
+    }
+    if (currentDirection == null) {
+      Player.Stop();
+    }
   }
 }
 //Startet den Spiel Loop
@@ -242,8 +300,9 @@ function PokemonEncounterFunction() {
     );
     console.log(PokemonEncounterCollision);
     if (PokemonEncounterCollision == true) {
-      if (Math.random() * 10 > 9) {
-        alert("Pokemon Encounter");
+      if (Math.random() * 10 > 7) {
+        enemyPokemon = getEnemyPokemon();
+        PokemonKampf = true;
       }
     }
   }
@@ -252,3 +311,66 @@ function PokemonEncounterFunction() {
     frameCount = 0;
   }
 }
+
+function getClickedButtonIndex(event) {
+  let rect = canvas.getBoundingClientRect();
+  let x = event.clientX - rect.left;
+  let y = event.clientY - rect.top;
+
+  for (let i = 0; i < Buttons.length; i++) {
+    let button = Buttons[i];
+    if (
+      x > button.x &&
+      x < button.x + button.width &&
+      y > button.y &&
+      y < button.y + button.height
+    ) {
+      return i;
+    }
+  }
+
+  return -1;
+}
+
+function getEnemyPokemon() {
+  let randomPokemon = Math.floor(Math.random() * 2);
+  return (enemyPokemon = { ...Object.values(PokemonList)[2] });
+  console.log(enemyPokemon);
+}
+
+function DamageEnemyPokemon(damage) {
+  if (enemyPokemon.health <= 0) {
+    console.log("Pokemon besiegt");
+  }
+  if (Math.floor(Math.random() * 10) <= 8) {
+    if (Math.floor(Math.random() * 10) == 9) {
+      damage = Math.floor(damage * 1.5);
+      console.log("Kritischer Treffer");
+      enemyPokemon.health -= damage;
+    } else {
+      enemyPokemon.health -= damage;
+    }
+  } else {
+    console.log("Angriff verfehlt");
+  }
+}
+
+function GainXP() {
+  let xp = Math.floor(Math.random() * 10);
+  currentPokemon.xp += xp;
+  if (currentPokemon.xp >= currentPokemon.maxXP && currentPokemon.level < 100) {
+    currentPokemon.xp = 0;
+    currentPokemon.level++;
+    // currentPokemon.maxXP = currentPokemon.maxXP * 1.5;
+    currentPokemon.maxHealth =
+      ((currentPokemon.baseHealth + 7.5 + 113.14 / 8 + 50) *
+        currentPokemon.level) /
+        50 +
+      10;
+
+    console.log("Level Up");
+    console.log(currentPokemon.maxHealth);
+  }
+  return xp;
+}
+enemyPokemon = getEnemyPokemon();
