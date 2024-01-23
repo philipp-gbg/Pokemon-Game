@@ -44,7 +44,8 @@ let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
   Player,
   selectedPokemon
 );
-let Set = 1;
+
+let Set = 0;
 let enemyPokemon = {};
 //karten Setup
 function createMap(Name, Position) {
@@ -114,25 +115,6 @@ function animate() {
         PokemonKampf = false;
       }, 5000);
     }
-
-    canvas.addEventListener("click", function (event) {
-      if (Set == 1 && Turn == 0) {
-        if (getClickedButtonIndex(event) == 1) {
-          Turn = 1;
-          console.log("Angiff 1");
-          DamageEnemyPokemon(Attacks[0].damage);
-          Turn = 1;
-        }
-        if (getClickedButtonIndex(event) == 2) {
-          Turn = 1;
-          console.log("Angiff 2");
-          DamageEnemyPokemon(Attacks[1].damage);
-          Turn = 1;
-        }
-      }
-    });
-
-    // Add the event listener
   } else {
     CollisionMap.draw();
     //Pokemon Encounter Erkennung
@@ -242,6 +224,93 @@ window.addEventListener("keydown", (e) => {
   directionStack.push(direction);
 });
 
+canvas.addEventListener("mouseup", function (event) {
+  let Index = getClickedButtonIndex(event);
+  if (PokemonKampf == true && Turn == 0) {
+    if (Set == 0) {
+      if (Index == 0) {
+        Escape();
+        Turn = 1;
+      }
+      if (Index == 1) {
+        Set = 2;
+      }
+      if (Index == 2) {
+        Set = 3;
+      }
+      if (Index == 3) {
+        Set = 1;
+        console.log("Angiff 1");
+      }
+    } else if (Set == 1) {
+      if (Index == 1) {
+        console.log("Angiff 1");
+        DamageEnemyPokemon(Attacks[0].damage);
+        Turn = 1;
+      }
+      if (Index == 2) {
+        console.log("Angiff 2");
+        DamageEnemyPokemon(Attacks[1].damage);
+        Turn = 1;
+      }
+      if (Index == 3) {
+        Set = 0;
+        console.log("Zurück");
+      }
+    } else if (Set == 2) {
+      if (Index == 1) {
+        console.log("Item 1");
+      }
+      if (Index == 2) {
+        console.log("Item 2");
+      }
+      if (Index == 3) {
+        Set = 0;
+        console.log("Zurück");
+      }
+    } else if (Set == 3) {
+      if (Index == 0) {
+        Set = 0;
+      }
+      if (Index == 1) {
+        console.log("Pokemon 1");
+      }
+      if (Index == 2) {
+        console.log("Pokemon 2");
+      }
+      if (Index == 3) {
+        Set = 4;
+      }
+    } else if (Set == 4) {
+      if (Index == 0) {
+        Set = 3;
+      }
+      if (Index == 1) {
+        console.log("Pokemon 3");
+      }
+      if (Index == 2) {
+        console.log("Pokemon 4");
+      }
+      if (Index == 3) {
+        Set = 5;
+      }
+    } else if (Set == 5) {
+      if (Index == 0) {
+        Set = 4;
+      }
+      if (Index == 1) {
+        console.log("Pokemon 5");
+      }
+      if (Index == 2) {
+        console.log("Pokemon 6");
+      }
+      if (Index == 3) {
+        Set = 0;
+      }
+    }
+  }
+});
+
 //Bewegung des Spielers stoppen
 window.addEventListener("keyup", (e) => {
   let direction;
@@ -312,7 +381,7 @@ function PokemonEncounterFunction() {
   }
 }
 
-function getClickedButtonIndex(event) {
+function getClickedButtonIndex() {
   let rect = canvas.getBoundingClientRect();
   let x = event.clientX - rect.left;
   let y = event.clientY - rect.top;
@@ -333,9 +402,8 @@ function getClickedButtonIndex(event) {
 }
 
 function getEnemyPokemon() {
-  let randomPokemon = Math.floor(Math.random() * 2);
+  // let randomPokemon = Math.floor(Math.random() * 2);
   return (enemyPokemon = { ...Object.values(PokemonList)[2] });
-  console.log(enemyPokemon);
 }
 
 function DamageEnemyPokemon(damage) {
@@ -374,3 +442,12 @@ function GainXP() {
   return xp;
 }
 enemyPokemon = getEnemyPokemon();
+
+function Escape() {
+  if (Math.floor(Math.random() * 10) <= 8) {
+    console.log("Du bist entkommen");
+    PokemonKampf = false;
+  } else {
+    console.log("Flucht fehlgeschlagen");
+  }
+}

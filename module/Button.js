@@ -42,6 +42,30 @@ export function setupButtons(canvas, Player, selectedPokemon) {
     {
       text: ["Items", Items[0].name, Items[1].name, "Zurück"],
     },
+    {
+      text: [
+        "Raus",
+        "1." + Object.keys(Player.inventory.Pokemon)[0],
+        "2." + Object.keys(Player.inventory.Pokemon)[1],
+        "Weiter",
+      ],
+    },
+    {
+      text: [
+        "Zurück",
+        "3." + Object.keys(Player.inventory.Pokemon)[2],
+        "4." + Object.keys(Player.inventory.Pokemon)[3],
+        "Weiter",
+      ],
+    },
+    {
+      text: [
+        "Züruck",
+        "5." + Object.keys(Player.inventory.Pokemon)[4],
+        "6." + Object.keys(Player.inventory.Pokemon)[5],
+        "Raus",
+      ],
+    },
   ];
 
   return { Buttons, ButtonText, currentPokemon, Attacks };
