@@ -18,8 +18,12 @@ const PlayerLeft = document.getElementById("PlayerLeft");
 const PlayerRight = document.getElementById("PlayerRight");
 let XpMessage = 0;
 let Schaden = 0;
-let done = false;
+let EnemyDone = false;
+let OwnDone = false;
+let WinDone = false;
+
 let Geflohen = 0;
+let Angriff = 0;
 let Turn = 0;
 let selectedPokemon = 0;
 let directionStack = [];
@@ -94,52 +98,11 @@ function animate() {
       currentPokemon,
       enemyPokemon
     );
-    if (Turn == 0 && currentPokemon.health > 0) {
-      if (done == false) {
-        DamageEnemyPokemon(Attacks[0].damage);
-      }
-      if (Schaden == 0) {
-        ShowMessage("Verfehlt", "Der Angriff hat verfehlt", c, canvas);
-      } else {
-        ShowMessage(
-          "Schaden",
-          "Du hast " + Schaden + " Schaden verursacht",
-          c,
-          canvas
-        );
-      }
-      done = true;
-      setTimeout(function () {
-        done = false;
-        Turn = 1;
-      }, 3000);
-    }
-
-    if (Turn == 1 && enemyPokemon.health > 0) {
-      if (done == false) {
-        Schaden = DamageOwnPokemon();
-      }
-      if (Schaden == 0) {
-        ShowMessage("Verfehlt", "Der Angriff hat verfehlt", c, canvas);
-      } else {
-        ShowMessage(
-          "Schaden",
-          "du hast " + Schaden + " Schaden erhalten",
-          c,
-          canvas
-        );
-      }
-      done = true;
-
-      setTimeout(function () {
-        done = false;
-        Turn = 0;
-      }, 3000);
-    }
 
     if (Geflohen == 2) {
       ShowMessage("Flucht", "Du bist erfolgreich geflüchtet", c, canvas);
       setTimeout(function () {
+        Turn = 0;
         PokemonKampf = false;
         Geflohen = 0;
       }, 3000);
@@ -151,8 +114,61 @@ function animate() {
       }, 3000);
     }
 
+    if (Turn == 1 && enemyPokemon.health > 0) {
+      let EnemyAttacks = Object.values(enemyPokemon.attacks);
+      if (EnemyDone == false) {
+        if (Math.random() * 10 > 5) {
+          Schaden = Damage(EnemyAttacks[0].damage, currentPokemon);
+        } else {
+          Schaden = Damage(EnemyAttacks[1].damage, currentPokemon);
+        }
+      }
+      if (Schaden == 0) {
+        ShowMessage(
+          "Gegnerischer Angriff",
+          "Der Gegner hat verfehlt",
+          c,
+          canvas
+        );
+      } else {
+        ShowMessage(
+          "Gegnerischer Angriff",
+          "Du hast " + Schaden + " Schaden bekommen",
+          c,
+          canvas
+        );
+      }
+      EnemyDone = true;
+      setTimeout(function () {
+        Turn = 0;
+        EnemyDone = false;
+      }, 3000);
+    }
+
+    if (Turn == 0 && Angriff != 0) {
+      if (OwnDone == false) {
+        Schaden = Damage(Attacks[Angriff - 1].damage, enemyPokemon);
+      }
+      if (Schaden == 0) {
+        ShowMessage("Dein Angriff", "Du hast verfehlt", c, canvas);
+      } else {
+        ShowMessage(
+          "Dein Angriff",
+          "Du hast " + Schaden + " Schaden verursacht",
+          c,
+          canvas
+        );
+      }
+      OwnDone = true;
+      setTimeout(function () {
+        Turn = 1;
+        Angriff = 0;
+        OwnDone = false;
+      }, 3000);
+    }
+
     if (enemyPokemon.health <= 0) {
-      if (done == false) {
+      if (WinDone == false) {
         console.log("Du hast gewonnen");
         XpMessage = GainXP();
       }
@@ -162,15 +178,14 @@ function animate() {
         c,
         canvas
       );
-      done = true;
+      WinDone = true;
       setTimeout(function () {
         PokemonKampf = false;
-        done = false;
+        WinDone = false;
       }, 5000);
     }
 
     if (currentPokemon.health <= 0) {
-      console.log("Tot");
       ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
   } else {
@@ -300,15 +315,13 @@ canvas.addEventListener("mouseup", function (event) {
         console.log("Angiff 1");
       }
     } else if (Set == 1) {
-      if (Index == 1) {
+      if (Index == 1 && currentPokemon.health > 0) {
         console.log("Angiff 1");
-        DamageEnemyPokemon(Attacks[0].damage);
-        Turn = 1;
+        Angriff = 1;
       }
-      if (Index == 2) {
+      if (Index == 2 && currentPokemon.health > 0) {
         console.log("Angiff 2");
-        DamageEnemyPokemon(Attacks[1].damage);
-        Turn = 1;
+        Angriff = 2;
       }
       if (Index == 3) {
         Set = 0;
@@ -330,10 +343,20 @@ canvas.addEventListener("mouseup", function (event) {
         Set = 0;
       }
       if (Index == 1) {
-        console.log("Pokemon 1");
+        selectedPokemon = 0;
+        ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+          canvas,
+          Player,
+          selectedPokemon
+        ));
       }
       if (Index == 2) {
-        console.log("Pokemon 2");
+        selectedPokemon = 1;
+        ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+          canvas,
+          Player,
+          selectedPokemon
+        ));
       }
       if (Index == 3) {
         Set = 4;
@@ -463,54 +486,6 @@ function getEnemyPokemon() {
   return (enemyPokemon = { ...Object.values(PokemonList)[2] });
 }
 
-function DamageEnemyPokemon(damage) {
-  if (enemyPokemon.health <= 0) {
-    console.log("Pokemon besiegt");
-  }
-  if (Math.floor(Math.random() * 10) <= 8) {
-    if (Math.floor(Math.random() * 10) == 9) {
-      enemyPokemon.health -= Math.floor(damage * 1.5);
-    } else {
-      enemyPokemon.health -= damage;
-    }
-  } else {
-    console.log("Angriff verfehlt");
-  }
-  Turn = 1;
-}
-
-function DamageOwnPokemon() {
-  let Attacks = Object.values(enemyPokemon.attacks);
-  let damage;
-  console.log(Attacks);
-  if (Math.random() * 10 >= 5) {
-    damage = Attacks[0].damage;
-    console.log("Angriff 1");
-  } else {
-    damage = Attacks[1].damage;
-    console.log("Angriff 2");
-  }
-  if (Math.floor(Math.random() * 10) <= 8) {
-    if (Math.floor(Math.random() * 10) == 9) {
-      console.log("Kritischer Treffer");
-      currentPokemon.health -= Math.floor(damage * 1.5);
-      return Math.floor(damage * 1.5);
-      //console log alles
-      console.log("Schaden: " + damage);
-      console.log("Leben: " + currentPokemon.health);
-    } else {
-      currentPokemon.health -= damage;
-      //console log alles
-      console.log("Schaden: " + damage);
-      console.log("Leben: " + currentPokemon.health);
-      return damage;
-    }
-  } else {
-    console.log("Angriff verfehlt");
-    return 0;
-  }
-}
-
 function GainXP() {
   let xp = Math.floor(Math.random() * 10);
   currentPokemon.xp += xp;
@@ -532,9 +507,23 @@ function GainXP() {
 enemyPokemon = getEnemyPokemon();
 
 function Escape() {
-  if (Math.floor(Math.random() * 10) >= 3) {
+  if (Math.floor(Math.random() * 10) >= 3 || currentPokemon.health <= 0) {
     Geflohen = 2;
   } else {
     Geflohen = 1;
   }
+}
+
+function Damage(Attack, Enemy) {
+  if (Math.random() * 10 <= 9) {
+    if (Math.random() * 10 <= 2) {
+      Attack = Math.floor(Attack * 1.2);
+    } else {
+      Attack = Attack;
+    }
+  } else {
+    Attack = 0;
+  }
+  Enemy.health -= Attack;
+  return Attack;
 }

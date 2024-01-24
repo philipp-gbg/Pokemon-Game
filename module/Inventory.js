@@ -13,12 +13,12 @@ export const PokemonList = {
     attacks: {
       Thunderbolt: {
         name: "Thunderbolt",
-        damage: 20,
+        damage: 5,
         quantity: 10,
       },
       Thunder: {
         name: "Thunder",
-        damage: 40,
+        damage: 5,
         quantity: 5,
       },
     },
