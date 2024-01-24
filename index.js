@@ -17,7 +17,9 @@ const PlayerUp = document.getElementById("PlayerUp");
 const PlayerLeft = document.getElementById("PlayerLeft");
 const PlayerRight = document.getElementById("PlayerRight");
 let XpMessage = 0;
+let Schaden = 0;
 let done = false;
+let Geflohen = 0;
 let Turn = 0;
 let selectedPokemon = 0;
 let directionStack = [];
@@ -38,7 +40,7 @@ console.log(Player.inventory);
 displayInventory(Player);
 // index.js
 
-import { setupButtons, drawButtons } from "./module/Button.js";
+import { setupButtons, drawButtons, ShowMessage } from "./module/Button.js";
 let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
   canvas,
   Player,
@@ -79,6 +81,7 @@ let PokemonKampf = true;
 function animate() {
   window.requestAnimationFrame(animate);
   if (PokemonKampf == true) {
+    Player.Stop();
     KampfMap.draw();
     Player.src = PlayerUp;
     Player.draw(c, canvas, true);
@@ -91,29 +94,84 @@ function animate() {
       currentPokemon,
       enemyPokemon
     );
+    if (Turn == 0 && currentPokemon.health > 0) {
+      if (done == false) {
+        DamageEnemyPokemon(Attacks[0].damage);
+      }
+      if (Schaden == 0) {
+        ShowMessage("Verfehlt", "Der Angriff hat verfehlt", c, canvas);
+      } else {
+        ShowMessage(
+          "Schaden",
+          "Du hast " + Schaden + " Schaden verursacht",
+          c,
+          canvas
+        );
+      }
+      done = true;
+      setTimeout(function () {
+        done = false;
+        Turn = 1;
+      }, 3000);
+    }
+
+    if (Turn == 1 && enemyPokemon.health > 0) {
+      if (done == false) {
+        Schaden = DamageOwnPokemon();
+      }
+      if (Schaden == 0) {
+        ShowMessage("Verfehlt", "Der Angriff hat verfehlt", c, canvas);
+      } else {
+        ShowMessage(
+          "Schaden",
+          "du hast " + Schaden + " Schaden erhalten",
+          c,
+          canvas
+        );
+      }
+      done = true;
+
+      setTimeout(function () {
+        done = false;
+        Turn = 0;
+      }, 3000);
+    }
+
+    if (Geflohen == 2) {
+      ShowMessage("Flucht", "Du bist erfolgreich geflüchtet", c, canvas);
+      setTimeout(function () {
+        PokemonKampf = false;
+        Geflohen = 0;
+      }, 3000);
+    } else if (Geflohen == 1) {
+      ShowMessage("Flucht", "Du bist nicht erfolgreich geflüchtet", c, canvas);
+      setTimeout(function () {
+        Geflohen = 0;
+        Turn = 1;
+      }, 3000);
+    }
+
     if (enemyPokemon.health <= 0) {
       if (done == false) {
         console.log("Du hast gewonnen");
         XpMessage = GainXP();
       }
-      c.fillStyle = "white";
-      c.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
-      c.strokeRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
-      c.fillStyle = "black";
-      c.fillText(
+      ShowMessage(
         "Du hast gewonnen",
-        canvas.width / 2 - 200,
-        canvas.height / 2 - 110
-      );
-      c.fillText(
         "Du hast " + XpMessage + " XP erhalten",
-        canvas.width / 2 - 200,
-        canvas.height / 2 - 70
+        c,
+        canvas
       );
       done = true;
       setTimeout(function () {
         PokemonKampf = false;
+        done = false;
       }, 5000);
+    }
+
+    if (currentPokemon.health <= 0) {
+      console.log("Tot");
+      ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
   } else {
     CollisionMap.draw();
@@ -230,7 +288,6 @@ canvas.addEventListener("mouseup", function (event) {
     if (Set == 0) {
       if (Index == 0) {
         Escape();
-        Turn = 1;
       }
       if (Index == 1) {
         Set = 2;
@@ -412,14 +469,45 @@ function DamageEnemyPokemon(damage) {
   }
   if (Math.floor(Math.random() * 10) <= 8) {
     if (Math.floor(Math.random() * 10) == 9) {
-      damage = Math.floor(damage * 1.5);
-      console.log("Kritischer Treffer");
-      enemyPokemon.health -= damage;
+      enemyPokemon.health -= Math.floor(damage * 1.5);
     } else {
       enemyPokemon.health -= damage;
     }
   } else {
     console.log("Angriff verfehlt");
+  }
+  Turn = 1;
+}
+
+function DamageOwnPokemon() {
+  let Attacks = Object.values(enemyPokemon.attacks);
+  let damage;
+  console.log(Attacks);
+  if (Math.random() * 10 >= 5) {
+    damage = Attacks[0].damage;
+    console.log("Angriff 1");
+  } else {
+    damage = Attacks[1].damage;
+    console.log("Angriff 2");
+  }
+  if (Math.floor(Math.random() * 10) <= 8) {
+    if (Math.floor(Math.random() * 10) == 9) {
+      console.log("Kritischer Treffer");
+      currentPokemon.health -= Math.floor(damage * 1.5);
+      return Math.floor(damage * 1.5);
+      //console log alles
+      console.log("Schaden: " + damage);
+      console.log("Leben: " + currentPokemon.health);
+    } else {
+      currentPokemon.health -= damage;
+      //console log alles
+      console.log("Schaden: " + damage);
+      console.log("Leben: " + currentPokemon.health);
+      return damage;
+    }
+  } else {
+    console.log("Angriff verfehlt");
+    return 0;
   }
 }
 
@@ -444,10 +532,9 @@ function GainXP() {
 enemyPokemon = getEnemyPokemon();
 
 function Escape() {
-  if (Math.floor(Math.random() * 10) <= 8) {
-    console.log("Du bist entkommen");
-    PokemonKampf = false;
+  if (Math.floor(Math.random() * 10) >= 3) {
+    Geflohen = 2;
   } else {
-    console.log("Flucht fehlgeschlagen");
+    Geflohen = 1;
   }
 }
