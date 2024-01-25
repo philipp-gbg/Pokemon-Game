@@ -16,16 +16,7 @@ const PlayerDown = document.getElementById("PlayerDown");
 const PlayerUp = document.getElementById("PlayerUp");
 const PlayerLeft = document.getElementById("PlayerLeft");
 const PlayerRight = document.getElementById("PlayerRight");
-let XpMessage = 0;
-let Schaden = 0;
-let EnemyDone = false;
-let OwnDone = false;
-let WinDone = false;
 
-let Geflohen = 0;
-let Angriff = 0;
-let Turn = 0;
-let selectedPokemon = 0;
 let directionStack = [];
 const Player = new PlayerConstructor({
   position: {
@@ -38,12 +29,11 @@ const Player = new PlayerConstructor({
   src: PlayerDown,
   inventory: fillInventory(),
 });
-
-console.log(Player.inventory);
-//function to display inventory
 displayInventory(Player);
-// index.js
 
+let selectedPokemon = 0;
+
+//Alle UI Elemente Laden
 import { setupButtons, drawButtons, ShowMessage } from "./module/Button.js";
 let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
   canvas,
@@ -52,7 +42,19 @@ let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
 );
 
 let Set = 0;
+
+//Alle Kampf Elemente
 let enemyPokemon = {};
+let XpMessage = 0;
+let Schaden = 0;
+let EnemyDone = false;
+let OwnDone = false;
+let WinDone = false;
+
+let Geflohen = 0;
+let Angriff = 0;
+let Turn = 0;
+
 //karten Setup
 function createMap(Name, Position) {
   return new MapConstructor({
@@ -60,7 +62,6 @@ function createMap(Name, Position) {
     src: document.getElementById(Name),
   });
 }
-
 const SpawnPosition = { x: -575, y: -1000 };
 const MapBackground = createMap("Map", SpawnPosition);
 const MapBackground2 = createMap("MapTransperent", SpawnPosition);
@@ -79,7 +80,7 @@ const LowerY = canvas.height / 2 + 2;
 
 //Frame Counter für die Pokemon Encounter Erkennung
 let frameCount = 0;
-let PokemonKampf = true;
+let PokemonKampf = false;
 
 //Spiel Loop
 function animate() {
@@ -271,32 +272,7 @@ function animate() {
 //Startet den Spiel Loop
 animate();
 
-//Bewegung des Spielers initialisieren
-window.addEventListener("keydown", (e) => {
-  let direction;
-  switch (e.key) {
-    case "w":
-      direction = "UP";
-      break;
-    case "s":
-      direction = "DOWN";
-      break;
-    case "a":
-      direction = "LEFT";
-      break;
-    case "d":
-      direction = "RIGHT";
-      break;
-  }
-  // Falls der Spieler die Taste bereits gedrückt hat, entferne sie aus dem Array
-  const index = directionStack.indexOf(direction);
-  if (index > -1) {
-    directionStack.splice(index, 1);
-  }
-  // Füge die Richtung dem Array hinzu
-  directionStack.push(direction);
-});
-
+//Button Klick Erkennung
 canvas.addEventListener("mouseup", function (event) {
   let Index = getClickedButtonIndex(event);
   if (PokemonKampf == true && Turn == 0) {
@@ -389,6 +365,32 @@ canvas.addEventListener("mouseup", function (event) {
       }
     }
   }
+});
+
+//Bewegung des Spielers initialisieren
+window.addEventListener("keydown", (e) => {
+  let direction;
+  switch (e.key) {
+    case "w":
+      direction = "UP";
+      break;
+    case "s":
+      direction = "DOWN";
+      break;
+    case "a":
+      direction = "LEFT";
+      break;
+    case "d":
+      direction = "RIGHT";
+      break;
+  }
+  // Falls der Spieler die Taste bereits gedrückt hat, wird sie aus dem Array entfernt
+  const index = directionStack.indexOf(direction);
+  if (index > -1) {
+    directionStack.splice(index, 1);
+  }
+  // Fügt dem Array die Richtung hinzu auf die Letzte Stelle
+  directionStack.push(direction);
 });
 
 //Bewegung des Spielers stoppen
