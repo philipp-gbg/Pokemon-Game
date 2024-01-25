@@ -228,7 +228,7 @@ function animate() {
     MapBackground.draw();
     Player.draw(c, canvas);
     MapBackground2.draw();
-    CollisionMap.draw();
+    // CollisionMap.draw();
 
     //Bewegung des Spielers
     let currentDirection = getCurrentDirection();
@@ -270,7 +270,6 @@ function animate() {
   }
 }
 //Startet den Spiel Loop
-animate();
 
 //Button Klick Erkennung
 canvas.addEventListener("mouseup", function (event) {
@@ -529,3 +528,4 @@ function Damage(Attack, Enemy) {
   Enemy.health -= Attack;
   return Attack;
 }
+animate();
