@@ -50,9 +50,12 @@ let Schaden = 0;
 let EnemyDone = false;
 let OwnDone = false;
 let WinDone = false;
+let ItemDone = false;
 
+let Captured = false;
 let Geflohen = 0;
 let Angriff = 0;
+let Item = 0;
 let Turn = 0;
 
 //karten Setup
@@ -80,7 +83,7 @@ const LowerY = canvas.height / 2 + 2;
 
 //Frame Counter für die Pokemon Encounter Erkennung
 let frameCount = 0;
-let PokemonKampf = false;
+let PokemonKampf = true;
 
 //Spiel Loop
 function animate() {
@@ -165,6 +168,41 @@ function animate() {
         Turn = 1;
         Angriff = 0;
         OwnDone = false;
+      }, 3000);
+    }
+
+    if (Turn == 0 && Item != 0) {
+      if (ItemDone == false) {
+        if (Item == 1) {
+          Captured = Capture(enemyPokemon.health, enemyPokemon.maxHealth);
+        }
+        if (Item == 2) {
+          currentPokemon.health += 15;
+        }
+      }
+      if (Item == 1) {
+        if (Captured == true) {
+          ShowMessage("Item", "Du hast ein Pokemon Gefangen", c, canvas);
+        }
+        if (Captured == false) {
+          ShowMessage("Item", "Du hast den Pokeball verfehlt", c, canvas);
+        }
+      }
+      if (Item == 2) {
+        ShowMessage("Item", "Du hast einen Heiltrank benutzt", c, canvas);
+      }
+
+      ItemDone = true;
+      setTimeout(function () {
+        if (Item == 1) {
+          Turn = 1;
+        }
+        if (Captured == true) {
+          PokemonKampf = false;
+          Captured = false;
+        }
+        Item = 0;
+        ItemDone = false;
       }, 3000);
     }
 
@@ -305,9 +343,11 @@ canvas.addEventListener("mouseup", function (event) {
     } else if (Set == 2) {
       if (Index == 1) {
         console.log("Item 1");
+        Item = 1;
       }
       if (Index == 2) {
         console.log("Item 2");
+        Item = 2;
       }
       if (Index == 3) {
         Set = 0;
@@ -341,10 +381,24 @@ canvas.addEventListener("mouseup", function (event) {
         Set = 3;
       }
       if (Index == 1) {
-        console.log("Pokemon 3");
+        if (Object.keys(Player.inventory.Pokemon).length >= 3) {
+          selectedPokemon = 2;
+          ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+            canvas,
+            Player,
+            selectedPokemon
+          ));
+        }
       }
       if (Index == 2) {
-        console.log("Pokemon 4");
+        if (Object.keys(Player.inventory.Pokemon).length >= 4) {
+          selectedPokemon = 3;
+          ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+            canvas,
+            Player,
+            selectedPokemon
+          ));
+        }
       }
       if (Index == 3) {
         Set = 5;
@@ -529,3 +583,20 @@ function Damage(Attack, Enemy) {
   return Attack;
 }
 animate();
+
+function Capture(Health, MaxHealth) {
+  if (Math.random() * 10 <= 5 && Health / MaxHealth <= 0.5) {
+    Player.inventory.Pokemon.push({ ...enemyPokemon });
+    displayInventory(Player);
+    ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+      canvas,
+      Player,
+      selectedPokemon
+    ));
+    console.log("Pokemon Gefangen");
+    return true;
+  } else {
+    console.log("Pokemon konnte nicht Gefangen werden");
+    return false;
+  }
+}

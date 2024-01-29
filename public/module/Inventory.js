@@ -49,7 +49,7 @@ export const PokemonList = {
   },
   Rattfratz: {
     name: "Rattfratz",
-    health: 20,
+    health: 5,
     maxHealth: 20,
     baseHealth: 20,
     xp: 0,
@@ -94,10 +94,7 @@ export function fillInventory() {
       description: "A tool used to buy items",
       quantity: 500,
     },
-    Pokemon: {
-      Pikashu: PokemonList.Pikashu,
-      Glumanda: PokemonList.Glumanda,
-    },
+    Pokemon: [PokemonList.Pikashu, PokemonList.Glumanda],
   };
   return Inventory;
 }
