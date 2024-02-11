@@ -9,6 +9,7 @@ import {
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
+let Stage = 2;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -32,6 +33,7 @@ const Player = new PlayerConstructor({
 displayInventory(Player);
 
 let selectedPokemon = 0;
+let { CollisionDown, CollisionLeft, CollisionRight, CollisionUP } = false;
 
 //Alle UI Elemente Laden
 import { setupButtons, drawButtons, ShowMessage } from "./module/Button.js";
@@ -57,6 +59,9 @@ let Geflohen = 0;
 let Angriff = 0;
 let Item = 0;
 let Turn = 0;
+let PokemonKampf = false;
+//Frame Counter für die Pokemon Encounter Erkennung
+let frameCount = 0;
 
 //karten Setup
 function createMap(Name, Position) {
@@ -65,32 +70,45 @@ function createMap(Name, Position) {
     src: document.getElementById(Name),
   });
 }
-const SpawnPosition = { x: -575, y: -1000 };
+const SpawnPosition = { x: -3200, y: -700 };
+const StorePositionIn = { x: -1600, y: -2400 };
+
 const MapBackground = createMap("Map", SpawnPosition);
 const MapBackground2 = createMap("MapTransperent", SpawnPosition);
 const CollisionMap = createMap("CollisionMap", SpawnPosition);
 const KampfMap = createMap("KampfMap", { x: 0, y: 0 });
 
-//Alle Farben für die Kollisionserkennung
-const Wand = [255, 0, 0, 255]; // ROT
-const PokemonEncounter = [0, 255, 0, 255]; // GRÜN
+const LadenMap = createMap("LadenMap", StorePositionIn);
+const LadenCollision = createMap("LadenCollision", StorePositionIn);
+const LadenTransperent = createMap("LadenTransperent", StorePositionIn);
 
-//Collision Punkte für die Kollisionserkennung
+let Transistion = false;
+
+import {
+  CollisionDetection,
+  PokemonEncounterFunction,
+  GeneralCollision,
+} from "./module/Collision.js";
+
 const LeftX = canvas.width / 2 - 14;
 const UpperY = canvas.height / 2 - 52;
 const RightX = canvas.width / 2 + 52;
 const LowerY = canvas.height / 2 + 2;
 
-//Frame Counter für die Pokemon Encounter Erkennung
-let frameCount = 0;
-let PokemonKampf = true;
+//Alle Kolliosions Farben
+const LeaveStage = [0, 255, 236, 255]; // TÜRKIS
+const EnterHouse = [253, 255, 0, 255]; // GELB
+const EnterStore = [255, 154, 0, 255]; // ORANGE
 
 //Spiel Loop
 function animate() {
   window.requestAnimationFrame(animate);
+  c.clearRect(0, 0, canvas.width, canvas.height);
   if (PokemonKampf == true) {
     Player.Stop();
-    KampfMap.draw();
+    if (Stage == 1) {
+      KampfMap.draw();
+    }
     Player.src = PlayerUp;
     Player.draw(c, canvas, true);
     drawButtons(
@@ -227,86 +245,69 @@ function animate() {
     if (currentPokemon.health <= 0) {
       ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
-  } else {
+  } else if (Stage == 1) {
     CollisionMap.draw();
-    //Pokemon Encounter Erkennung
-    PokemonEncounterFunction();
-    //Kollisions Erkennung
 
-    let CollisionUP = Collision(
-      [
-        [LeftX + 10, UpperY],
-        [RightX - 10, UpperY],
-      ],
-      Wand
-    );
-    let CollisionDown = Collision(
-      [
-        [LeftX + 10, LowerY],
-        [RightX - 10, LowerY],
-      ],
-      Wand
-    );
-    let CollisionLeft = Collision(
-      [
-        [LeftX, UpperY + 10],
-        [LeftX, LowerY - 10],
-      ],
-      Wand
-    );
-    let CollisionRight = Collision(
-      [
-        [RightX, UpperY + 10],
-        [RightX, LowerY - 10],
-      ],
-      Wand
-    );
+    //Collsions Erkennung
+    if (
+      PokemonEncounterFunction(LeftX, RightX, UpperY, frameCount, c) == true
+    ) {
+      PokemonKampf = true;
+      frameCount = 0;
+    }
+    ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
+      CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
+    if (GeneralCollision(LeftX, RightX, LowerY, c, EnterHouse) == true) {
+      console.log("Haus");
+    }
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, EnterStore) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 2;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
+    }
 
     //Rest der Karte gezeichnet sowie der Spieler
     MapBackground.draw();
+
     Player.draw(c, canvas);
     MapBackground2.draw();
-    // CollisionMap.draw();
+    CollisionMap.draw();
+    Movement(MapBackground, MapBackground2, CollisionMap);
+  } else if (Stage == 2) {
+    LadenCollision.draw();
 
-    //Bewegung des Spielers
-    let currentDirection = getCurrentDirection();
-    if (currentDirection == "UP" && CollisionUP == false) {
-      MapBackground.position.y += Player.velocity;
-      MapBackground2.position.y += Player.velocity;
-      CollisionMap.position.y += Player.velocity;
-      Player.src = PlayerUp;
-      Player.move();
-      frameCount++;
+    //Collsions Erkennung
+
+    ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
+      CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, LeaveStage) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 1;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
     }
-    if (currentDirection == "DOWN" && CollisionDown == false) {
-      MapBackground.position.y -= Player.velocity;
-      MapBackground2.position.y -= Player.velocity;
-      CollisionMap.position.y -= Player.velocity;
-      Player.src = PlayerDown;
-      Player.move();
-      frameCount++;
-    }
-    if (currentDirection == "LEFT" && CollisionLeft == false) {
-      MapBackground.position.x += Player.velocity;
-      MapBackground2.position.x += Player.velocity;
-      CollisionMap.position.x += Player.velocity;
-      Player.src = PlayerLeft;
-      Player.move();
-      frameCount++;
-    }
-    if (currentDirection == "RIGHT" && CollisionRight == false) {
-      MapBackground.position.x -= Player.velocity;
-      MapBackground2.position.x -= Player.velocity;
-      CollisionMap.position.x -= Player.velocity;
-      Player.src = PlayerRight;
-      Player.move();
-      frameCount++;
-    }
-    if (currentDirection == null) {
-      Player.Stop();
-    }
+
+    //Rest der Karte gezeichnet sowie der Spieler
+    LadenMap.draw();
+
+    Player.draw(c, canvas);
+    LadenTransperent.draw();
+    LadenCollision.draw();
+    Movement(LadenMap, LadenTransperent, LadenCollision);
   }
+
+  //Bewegung des Spielers
 }
+
 //Startet den Spiel Loop
 
 //Button Klick Erkennung
@@ -475,47 +476,6 @@ function getCurrentDirection() {
   return directionStack[directionStack.length - 1] || null;
 }
 
-//Kollisions Erkennung
-function Collision(line, targetColor) {
-  for (const point of line) {
-    let x = point[0];
-    let y = point[1];
-
-    //Gibt die RGBA Werte des Pixels zurück
-    let pixelData = c.getImageData(x, y, 1, 1).data;
-    let pixelArray = Array.from(pixelData);
-
-    if (pixelArray.toString() === targetColor.toString()) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function PokemonEncounterFunction() {
-  //wird alle 120 Frames ausgeführt
-  if (frameCount % 120 === 0) {
-    let PokemonEncounterCollision = Collision(
-      [
-        [LeftX + 10, UpperY],
-        [RightX - 10, UpperY],
-      ],
-      PokemonEncounter
-    );
-    console.log(PokemonEncounterCollision);
-    if (PokemonEncounterCollision == true) {
-      if (Math.random() * 10 > 7) {
-        enemyPokemon = getEnemyPokemon();
-        PokemonKampf = true;
-      }
-    }
-  }
-  // Setze frameCount auf 0, wenn es größer als 120 ist
-  if (frameCount >= 120) {
-    frameCount = 0;
-  }
-}
-
 function getClickedButtonIndex() {
   let rect = canvas.getBoundingClientRect();
   let x = event.clientX - rect.left;
@@ -598,5 +558,44 @@ function Capture(Health, MaxHealth) {
   } else {
     console.log("Pokemon konnte nicht Gefangen werden");
     return false;
+  }
+}
+
+function Movement(Map, MapTransperent, CollisionMap) {
+  let currentDirection = getCurrentDirection();
+  if (currentDirection == "UP" && CollisionUP == false) {
+    Map.position.y += Player.velocity;
+    MapTransperent.position.y += Player.velocity;
+    CollisionMap.position.y += Player.velocity;
+    Player.src = PlayerUp;
+    Player.move();
+    frameCount++;
+  }
+  if (currentDirection == "DOWN" && CollisionDown == false) {
+    Map.position.y -= Player.velocity;
+    MapTransperent.position.y -= Player.velocity;
+    CollisionMap.position.y -= Player.velocity;
+    Player.src = PlayerDown;
+    Player.move();
+    frameCount++;
+  }
+  if (currentDirection == "LEFT" && CollisionLeft == false) {
+    Map.position.x += Player.velocity;
+    MapTransperent.position.x += Player.velocity;
+    CollisionMap.position.x += Player.velocity;
+    Player.src = PlayerLeft;
+    Player.move();
+    frameCount++;
+  }
+  if (currentDirection == "RIGHT" && CollisionRight == false) {
+    Map.position.x -= Player.velocity;
+    MapTransperent.position.x -= Player.velocity;
+    CollisionMap.position.x -= Player.velocity;
+    Player.src = PlayerRight;
+    Player.move();
+    frameCount++;
+  }
+  if (currentDirection == null) {
+    Player.Stop();
   }
 }
