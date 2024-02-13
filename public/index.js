@@ -9,7 +9,7 @@ import {
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
-let Stage = 2;
+let Stage = 1;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -26,7 +26,7 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 5,
+  velocity: 10,
   src: PlayerDown,
   inventory: fillInventory(),
 });
@@ -36,7 +36,12 @@ let selectedPokemon = 0;
 let { CollisionDown, CollisionLeft, CollisionRight, CollisionUP } = false;
 
 //Alle UI Elemente Laden
-import { setupButtons, drawButtons, ShowMessage } from "./module/Button.js";
+import {
+  setupButtons,
+  drawFightButtons,
+  ShowMessage,
+  drawStoreButtons,
+} from "./module/Button.js";
 let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
   canvas,
   Player,
@@ -44,6 +49,14 @@ let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
 );
 
 let Set = 0;
+//Alle Laden Elemente
+let Talking = false;
+let StoreSet = false;
+let HeilungstrankBought = false;
+let PokeballBought = false;
+let BuyingNotificationPotion = false;
+let BuyingNotificationBall = false;
+let NotEnoughMoney = false;
 
 //Alle Kampf Elemente
 let enemyPokemon = {};
@@ -70,12 +83,14 @@ function createMap(Name, Position) {
     src: document.getElementById(Name),
   });
 }
-const SpawnPosition = { x: -3200, y: -700 };
-const StorePositionIn = { x: -1600, y: -2400 };
+const SpawnPosition = { x: -9130, y: -1990 };
+// const StorePositionIn = { x: -1430, y: -1560 };
+const StorePositionIn = { x: -1600, y: -1600 };
+const TalkingPosition = { x: -1430, y: -1560 };
 
-const MapBackground = createMap("Map", SpawnPosition);
-const MapBackground2 = createMap("MapTransperent", SpawnPosition);
-const CollisionMap = createMap("CollisionMap", SpawnPosition);
+const MainMap = createMap("Map", SpawnPosition);
+const MainTransparent = createMap("MapTransperent", SpawnPosition);
+const MainCollisions = createMap("CollisionMap", SpawnPosition);
 const KampfMap = createMap("KampfMap", { x: 0, y: 0 });
 
 const LadenMap = createMap("LadenMap", StorePositionIn);
@@ -99,6 +114,7 @@ const LowerY = canvas.height / 2 + 2;
 const LeaveStage = [0, 255, 236, 255]; // TÜRKIS
 const EnterHouse = [253, 255, 0, 255]; // GELB
 const EnterStore = [255, 154, 0, 255]; // ORANGE
+const TalkingCollision = [255, 0, 255, 255]; // PINK
 
 //Spiel Loop
 function animate() {
@@ -111,7 +127,7 @@ function animate() {
     }
     Player.src = PlayerUp;
     Player.draw(c, canvas, true);
-    drawButtons(
+    drawFightButtons(
       c,
       canvas,
       Buttons,
@@ -246,14 +262,18 @@ function animate() {
       ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
   } else if (Stage == 1) {
-    CollisionMap.draw();
+    console.log("Stage 1");
+    MainCollisions.draw();
 
     //Collsions Erkennung
     if (
       PokemonEncounterFunction(LeftX, RightX, UpperY, frameCount, c) == true
     ) {
+      getEnemyPokemon();
       PokemonKampf = true;
+      Set = 0;
       frameCount = 0;
+      Turn = 0;
     }
     ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
       CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
@@ -272,12 +292,12 @@ function animate() {
     }
 
     //Rest der Karte gezeichnet sowie der Spieler
-    MapBackground.draw();
+    MainMap.draw();
 
     Player.draw(c, canvas);
-    MapBackground2.draw();
-    CollisionMap.draw();
-    Movement(MapBackground, MapBackground2, CollisionMap);
+    MainTransparent.draw();
+    // MainCollisions.draw();
+    Movement(MainMap, MainTransparent, MainCollisions);
   } else if (Stage == 2) {
     LadenCollision.draw();
 
@@ -295,17 +315,66 @@ function animate() {
         Transistion = false;
       }, 5000);
     }
+    if (GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true) {
+      Talking = true;
+      if (StoreSet == false) {
+        Set = 6;
+        StoreSet = true;
+      }
+    }
 
     //Rest der Karte gezeichnet sowie der Spieler
     LadenMap.draw();
-
     Player.draw(c, canvas);
     LadenTransperent.draw();
-    LadenCollision.draw();
-    Movement(LadenMap, LadenTransperent, LadenCollision);
-  }
 
-  //Bewegung des Spielers
+    if (Talking == true) {
+      LadenMap.position = { ...TalkingPosition };
+      LadenTransperent.position = { ...TalkingPosition };
+      LadenCollision.position = { ...TalkingPosition };
+      Player.src = PlayerUp;
+      Player.Stop();
+
+      drawStoreButtons(c, canvas, Buttons, ButtonText, Set);
+    } else {
+      Movement(LadenMap, LadenTransperent, LadenCollision);
+    }
+
+    if (HeilungstrankBought == true) {
+      if (BuyingNotificationPotion == false) {
+        Player.inventory.Items.potion.quantity++;
+        displayInventory(Player);
+      }
+      ShowMessage("Gekauft", "+1 Heilungstrank", c, canvas);
+      BuyingNotificationPotion = true;
+
+      setTimeout(function () {
+        HeilungstrankBought = false;
+        BuyingNotificationPotion = false;
+      }, 3000);
+    }
+    if (PokeballBought == true) {
+      if (BuyingNotificationBall == false) {
+        Player.inventory.Items.pokeball.quantity++;
+        displayInventory(Player);
+      }
+      ShowMessage("Gekauft", "+1 Pokeball", c, canvas);
+      BuyingNotificationBall = true;
+
+      setTimeout(function () {
+        PokeballBought = false;
+        BuyingNotificationBall = false;
+      }, 3000);
+    }
+    if (NotEnoughMoney == true) {
+      ShowMessage("Fehlgeschlagen", "Nicht genug Geld", c, canvas);
+      setTimeout(function () {
+        NotEnoughMoney = false;
+      }, 3000);
+    }
+
+    //LadenCollision.draw();
+  }
 }
 
 //Startet den Spiel Loop
@@ -416,6 +485,55 @@ canvas.addEventListener("mouseup", function (event) {
       }
       if (Index == 3) {
         Set = 0;
+      }
+    }
+  }
+  if (Talking == true) {
+    if (Set == 6) {
+      if (Index == 0) {
+        Talking = false;
+        LadenMap.position = { ...StorePositionIn };
+        LadenTransperent.position = { ...StorePositionIn };
+        LadenCollision.position = { ...StorePositionIn };
+        StoreSet = false;
+      }
+      if (Index == 1) {
+        Set = 7;
+      }
+      if (Index == 2) {
+        Set = 8;
+      }
+    } else if (Set == 7) {
+      if (Index == 1) {
+        if (
+          Player.inventory.Geld.quantity >= Player.inventory.Items.potion.price
+        ) {
+          Player.inventory.Geld.quantity -= Player.inventory.Items.potion.price;
+          displayInventory(Player);
+          HeilungstrankBought = true;
+        } else {
+          NotEnoughMoney = true;
+        }
+      }
+      if (Index == 2) {
+        Set = 6;
+      }
+    } else if (Set == 8) {
+      if (Index == 1) {
+        if (
+          Player.inventory.Geld.quantity >=
+          Player.inventory.Items.pokeball.price
+        ) {
+          Player.inventory.Geld.quantity -=
+            Player.inventory.Items.pokeball.price;
+          displayInventory(Player);
+          PokeballBought = true;
+        } else {
+          NotEnoughMoney = true;
+        }
+      }
+      if (Index == 2) {
+        Set = 6;
       }
     }
   }

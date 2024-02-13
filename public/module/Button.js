@@ -66,12 +66,21 @@ export function setupButtons(canvas, Player, selectedPokemon) {
         "Raus",
       ],
     },
+    {
+      text: ["Gehen", "Heilungstrank", "Pokeball", ""],
+    },
+    {
+      text: ["Heilungstrank", "Kaufen", "Abbrechen", ""],
+    },
+    {
+      text: ["Pokeball", "Kaufen", "Abbrechen", ""],
+    },
   ];
 
   return { Buttons, ButtonText, currentPokemon, Attacks };
 }
 
-export function drawButtons(
+export function drawFightButtons(
   c,
   canvas,
   Buttons,
@@ -140,11 +149,39 @@ export function drawButtons(
   );
 }
 
+export function drawStoreButtons(c, canvas, Buttons, ButtonText, Set) {
+  c.fillStyle = "blue";
+  for (let i = 0; i < Buttons.length; i++) {
+    c.fillStyle = "white";
+    c.fillRect(Buttons[i].x, Buttons[i].y, Buttons[i].width, Buttons[i].height);
+    //add text to the button
+    c.fillStyle = "black";
+    c.font = "30px Arial";
+    c.textAlign = "center";
+    c.fillText(
+      ButtonText[Set].text[i],
+      Buttons[i].x + Buttons[i].width / 2,
+      Buttons[i].y + Buttons[i].height / 2 + 10
+    );
+    //add Border to button
+    c.strokeStyle = "black";
+    c.lineWidth = 5;
+    c.strokeRect(
+      Buttons[i].x,
+      Buttons[i].y,
+      Buttons[i].width,
+      Buttons[i].height
+    );
+  }
+}
+
 export function ShowMessage(Heading, Message, c, canvas) {
   c.fillStyle = "white";
   c.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
   c.strokeRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
   c.fillStyle = "black";
+  c.font = "30px Arial";
+  c.textAlign = "left";
   c.fillText(Heading, canvas.width / 2 - 200, canvas.height / 2 - 110);
   c.fillText(Message, canvas.width / 2 - 200, canvas.height / 2 - 70);
 }

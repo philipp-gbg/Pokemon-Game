@@ -111,6 +111,10 @@ export function displayInventory(Player) {
   let inventoryPokemonLength = inventoryPokemonKeys.length;
   let inventoryItemsHTML = "";
   let inventoryPokemonHTML = "";
+  //Add a Money display
+  document.getElementById(
+    "inventory-money"
+  ).innerHTML = `Geld: ${inventory.Geld.quantity}`;
   for (let i = 0; i < inventoryItemsLength; i++) {
     inventoryItemsHTML += `<div class="inventory-item">
     <div class="inventory-item-name">${inventoryItemsValues[i].name}</div>
