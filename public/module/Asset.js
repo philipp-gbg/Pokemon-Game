@@ -4,10 +4,14 @@ export class MapConstructor {
   constructor({ position, src }) {
     this.position = position;
     this.src = src;
+    this.scale = 6; // Add scale factor
   }
 
   draw() {
-    c.drawImage(this.src, this.position.x, this.position.y);
+    // Make sure to pass the context 'c' as a parameter
+    const width = this.src.width * this.scale;
+    const height = this.src.height * this.scale;
+    c.drawImage(this.src, this.position.x, this.position.y, width, height);
   }
 }
 

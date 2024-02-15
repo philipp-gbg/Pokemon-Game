@@ -2,15 +2,21 @@
 const Wand = [255, 0, 0, 255]; // ROT
 const PokemonEncounter = [0, 255, 0, 255]; // GRÜN
 
-
 export function Collision(line, targetColor, c) {
-  for (const point of line) {
+  // Get the entire image data once
+  const imageData = c.getImageData(0, 0, c.canvas.width, c.canvas.height).data;
+
+  // Determine the step size based on the length of the line
+  const step = Math.max(1, Math.floor(line.length / 1000));
+
+  for (let i = 0; i < line.length; i += step) {
+    const point = line[i];
     let x = point[0];
     let y = point[1];
 
-    //Gibt die RGBA Werte des Pixels zurück
-    let pixelData = c.getImageData(x, y, 1, 1).data;
-    let pixelArray = Array.from(pixelData);
+    // Calculate the index in the image data array
+    let index = (x + y * c.canvas.width) * 4;
+    let pixelArray = Array.from(imageData.slice(index, index + 4));
 
     if (pixelArray.toString() === targetColor.toString()) {
       return true;

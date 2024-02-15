@@ -9,6 +9,7 @@ import {
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
+canvas.style.imageRendering = "pixelated";
 let Stage = 1;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
@@ -262,7 +263,6 @@ function animate() {
       ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
   } else if (Stage == 1) {
-    console.log("Stage 1");
     MainCollisions.draw();
 
     //Collsions Erkennung
