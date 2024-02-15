@@ -49,7 +49,7 @@ export const PokemonList = {
   },
   Rattfratz: {
     name: "Rattfratz",
-    health: 5,
+    health: 20,
     maxHealth: 20,
     baseHealth: 20,
     xp: 0,
@@ -67,6 +67,30 @@ export const PokemonList = {
       Scratch: {
         name: "Scratch",
         damage: 15,
+        quantity: 5,
+      },
+    },
+  },
+  Bisasam: {
+    name: "Bisasam",
+    health: 45,
+    maxHealth: 45,
+    baseHealth: 45,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 1,
+    type: "Grass",
+    src: "",
+    attacks: {
+      VineWhip: {
+        name: "VineWhip",
+        damage: 15,
+        quantity: 10,
+      },
+      Solarbeam: {
+        name: "Solarbeam",
+        damage: 30,
         quantity: 5,
       },
     },

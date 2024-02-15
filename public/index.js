@@ -26,7 +26,7 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 10,
+  velocity: 5,
   src: PlayerDown,
   inventory: fillInventory(),
 });
@@ -615,8 +615,8 @@ function getClickedButtonIndex() {
 }
 
 function getEnemyPokemon() {
-  // let randomPokemon = Math.floor(Math.random() * 2);
-  return (enemyPokemon = { ...Object.values(PokemonList)[2] });
+  let randomPokemon = Math.floor(Math.random() * 3 + 1);
+  return (enemyPokemon = { ...Object.values(PokemonList)[randomPokemon] });
 }
 
 function GainXP() {
