@@ -10,7 +10,7 @@ const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 1;
+let Stage = 2;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden

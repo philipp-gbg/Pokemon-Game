@@ -3,9 +3,6 @@ const Wand = [255, 0, 0, 255]; // ROT
 const PokemonEncounter = [0, 255, 0, 255]; // GRÜN
 
 export function Collision(line, targetColor, c) {
-  // Get the entire image data once
-  const imageData = c.getImageData(0, 0, c.canvas.width, c.canvas.height).data;
-
   // Determine the step size based on the length of the line
   const step = Math.max(1, Math.floor(line.length / 1000));
 
@@ -14,11 +11,10 @@ export function Collision(line, targetColor, c) {
     let x = point[0];
     let y = point[1];
 
-    // Calculate the index in the image data array
-    let index = (x + y * c.canvas.width) * 4;
-    let pixelArray = Array.from(imageData.slice(index, index + 4));
+    // Get the image data for the current pixel
+    let pixelData = c.getImageData(x, y, 1, 1).data;
 
-    if (pixelArray.toString() === targetColor.toString()) {
+    if (pixelData.toString() === targetColor.toString()) {
       return true;
     }
   }
