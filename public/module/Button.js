@@ -175,13 +175,3 @@ export function drawStoreButtons(c, canvas, Buttons, ButtonText, Set) {
   }
 }
 
-export function ShowMessage(Heading, Message, c, canvas) {
-  c.fillStyle = "white";
-  c.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
-  c.strokeRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
-  c.fillStyle = "black";
-  c.font = "30px Arial";
-  c.textAlign = "left";
-  c.fillText(Heading, canvas.width / 2 - 200, canvas.height / 2 - 110);
-  c.fillText(Message, canvas.width / 2 - 200, canvas.height / 2 - 70);
-}

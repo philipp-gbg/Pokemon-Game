@@ -5,12 +5,14 @@ import {
   PokemonList,
 } from "./module/Inventory.js";
 
+import { ShowMessage, Dialog, DialogSets } from "./module/Talking.js";
+
 // Canvas setup
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 2;
+let Stage = 1;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -40,7 +42,6 @@ let { CollisionDown, CollisionLeft, CollisionRight, CollisionUP } = false;
 import {
   setupButtons,
   drawFightButtons,
-  ShowMessage,
   drawStoreButtons,
 } from "./module/Button.js";
 let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
@@ -51,7 +52,7 @@ let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
 
 let Set = 0;
 //Alle Laden Elemente
-let Talking = false;
+let Talking = true;
 let StoreSet = false;
 let HeilungstrankBought = false;
 let PokeballBought = false;
@@ -75,8 +76,13 @@ let Item = 0;
 let Turn = 0;
 let PokemonKampf = false;
 //Frame Counter für die Pokemon Encounter Erkennung
-let frameCount = 0;
+let frameCount = 1;
 
+//Alle Dialog Elemente
+let Text = 1;
+let counter = 0;
+let IsDialog = false;
+let isWaiting = false;
 //karten Setup
 function createMap(Name, Position) {
   return new MapConstructor({
@@ -153,7 +159,7 @@ function animate() {
       }, 3000);
     }
 
-    if (Turn == 1 && enemyPokemon.health > 0) {
+    if (Turn == 1 && enemyPokemon.health > 0 && currentPokemon.health > 0) {
       let EnemyAttacks = Object.values(enemyPokemon.attacks);
       if (EnemyDone == false) {
         if (Math.random() * 10 > 5) {
@@ -208,31 +214,51 @@ function animate() {
 
     if (Turn == 0 && Item != 0) {
       if (ItemDone == false) {
-        if (Item == 1) {
+        if (
+          Item == 1 &&
+          Player.inventory.Pokemon.length < 6 &&
+          Player.inventory.Items.pokeball.quantity > 0
+        ) {
           Captured = Capture(enemyPokemon.health, enemyPokemon.maxHealth);
         }
-        if (Item == 2) {
+        if (
+          Item == 2 &&
+          currentPokemon.health > 0 &&
+          currentPokemon.health < currentPokemon.maxHealth &&
+          Player.inventory.Items.potion.quantity > 0
+        ) {
           currentPokemon.health += 15;
+          if (currentPokemon.health > currentPokemon.maxHealth) {
+            currentPokemon.health = currentPokemon.maxHealth;
+          }
+          Player.inventory.Items.potion.quantity--;
         }
       }
       if (Item == 1) {
         if (Captured == true) {
           ShowMessage("Item", "Du hast ein Pokemon Gefangen", c, canvas);
+          Player.inventory.Items.pokeball.quantity--;
         }
-        if (Captured == false) {
+        if (Captured == false && Player.inventory.Items.pokeball.quantity > 0) {
           ShowMessage("Item", "Du hast den Pokeball verfehlt", c, canvas);
+          Player.inventory.Items.pokeball.quantity--;
+        } else if (Player.inventory.Items.pokeball.quantity == 0) {
+          ShowMessage("Fehlgeschlagen", "Keine Pokebälle mehr", c, canvas);
         }
       }
-      if (Item == 2) {
+      if (Item == 2 && currentPokemon.health > 0) {
         ShowMessage("Item", "Du hast einen Heiltrank benutzt", c, canvas);
+      } else if (Item == 2 && currentPokemon.health <= 0) {
+        ShowMessage("Fehlgeschlagen", "Dein Pokemon ist tot", c, canvas);
+      } else if (Item == 2 && Player.inventory.Items.potion.quantity == 0) {
+        ShowMessage("Fehlgeschlagen", "Keine Heiltränke mehr", c, canvas);
       }
 
       ItemDone = true;
       setTimeout(function () {
-        if (Item == 1) {
+        if (Item == 1 && Captured == false) {
           Turn = 1;
-        }
-        if (Captured == true) {
+        } else {
           PokemonKampf = false;
           Captured = false;
         }
@@ -297,7 +323,12 @@ function animate() {
     Player.draw(c, canvas);
     MainTransparent.draw();
     // MainCollisions.draw();
-    Movement(MainMap, MainTransparent, MainCollisions);
+    if (IsDialog && counter < DialogSets[Text].text.length) {
+      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
+        counter = newCounter;
+      });
+    }
+    if (!IsDialog) Movement(MainMap, MainTransparent, MainCollisions);
   } else if (Stage == 2) {
     LadenCollision.draw();
 
@@ -478,10 +509,24 @@ canvas.addEventListener("mouseup", function (event) {
         Set = 4;
       }
       if (Index == 1) {
-        console.log("Pokemon 5");
+        if (Object.keys(Player.inventory.Pokemon).length >= 5) {
+          selectedPokemon = 4;
+          ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+            canvas,
+            Player,
+            selectedPokemon
+          ));
+        }
       }
       if (Index == 2) {
-        console.log("Pokemon 6");
+        if (Object.keys(Player.inventory.Pokemon).length >= 6) {
+          selectedPokemon = 5;
+          ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+            canvas,
+            Player,
+            selectedPokemon
+          ));
+        }
       }
       if (Index == 3) {
         Set = 0;
@@ -663,7 +708,7 @@ function Damage(Attack, Enemy) {
 animate();
 
 function Capture(Health, MaxHealth) {
-  if (Math.random() * 10 <= 5 && Health / MaxHealth <= 0.5) {
+  if (Math.random() * 10 <= 30 && Health / MaxHealth <= 0.5) {
     Player.inventory.Pokemon.push({ ...enemyPokemon });
     displayInventory(Player);
     ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
