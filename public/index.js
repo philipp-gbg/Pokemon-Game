@@ -1,18 +1,18 @@
 import { MapConstructor, PlayerConstructor } from "./module/Asset.js";
 import {
-  fillInventory,
-  displayInventory,
   PokemonList,
+  displayInventory,
+  fillInventory,
 } from "./module/Inventory.js";
 
-import { ShowMessage, Dialog, DialogSets } from "./module/Talking.js";
+import { Dialog, DialogSets, ShowMessage } from "./module/Talking.js";
 
 // Canvas setup
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 1;
+let Stage = 3;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -40,9 +40,9 @@ let { CollisionDown, CollisionLeft, CollisionRight, CollisionUP } = false;
 
 //Alle UI Elemente Laden
 import {
-  setupButtons,
   drawFightButtons,
   drawStoreButtons,
+  setupButtons,
 } from "./module/Button.js";
 let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
   canvas,
@@ -52,7 +52,7 @@ let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
 
 let Set = 0;
 //Alle Laden Elemente
-let Talking = true;
+let Talking = false;
 let StoreSet = false;
 let HeilungstrankBought = false;
 let PokeballBought = false;
@@ -79,10 +79,11 @@ let PokemonKampf = false;
 let frameCount = 1;
 
 //Alle Dialog Elemente
-let Text = 1;
+let Text = 0;
 let counter = 0;
 let IsDialog = false;
 let isWaiting = false;
+let Progress = 1;
 //karten Setup
 function createMap(Name, Position) {
   return new MapConstructor({
@@ -94,6 +95,7 @@ const SpawnPosition = { x: -9130, y: -1990 };
 // const StorePositionIn = { x: -1430, y: -1560 };
 const StorePositionIn = { x: -1600, y: -1600 };
 const TalkingPosition = { x: -1430, y: -1560 };
+const ProfPositionIn = { x: -1150, y: -1460 };
 
 const MainMap = createMap("Map", SpawnPosition);
 const MainTransparent = createMap("MapTransperent", SpawnPosition);
@@ -104,12 +106,16 @@ const LadenMap = createMap("LadenMap", StorePositionIn);
 const LadenCollision = createMap("LadenCollision", StorePositionIn);
 const LadenTransperent = createMap("LadenTransperent", StorePositionIn);
 
-let Transistion = false;
+const ProfessorMap = createMap("ProfessorMap", ProfPositionIn);
+const ProfessorCollision = createMap("ProfessorCollision", ProfPositionIn);
+const ProfessorTransperent = createMap("ProfessorTransperent", ProfPositionIn);
+
+let Transistion = true;
 
 import {
   CollisionDetection,
-  PokemonEncounterFunction,
   GeneralCollision,
+  PokemonEncounterFunction,
 } from "./module/Collision.js";
 
 const LeftX = canvas.width / 2 - 14;
@@ -327,6 +333,11 @@ function animate() {
       Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
         counter = newCounter;
       });
+      if (counter >= DialogSets[Text].text.length - 1) {
+        IsDialog = false;
+        counter = 0;
+        console.log("Dialog Ende");
+      }
     }
     if (!IsDialog) Movement(MainMap, MainTransparent, MainCollisions);
   } else if (Stage == 2) {
@@ -405,6 +416,46 @@ function animate() {
     }
 
     //LadenCollision.draw();
+  } else if (Stage == 3) {
+    ProfessorCollision.draw();
+    ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
+      CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, LeaveStage) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 1;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
+    }
+    if (
+      Progress == 1 &&
+      GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true
+    ) {
+      Player.Stop();
+      Text = 3;
+      IsDialog = true;
+    }
+    ProfessorMap.draw();
+
+    Player.draw(c, canvas);
+    ProfessorTransperent.draw();
+
+    if (IsDialog && counter < DialogSets[Text].text.length && Progress == 1) {
+      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
+        counter = newCounter;
+      });
+      if (counter >= DialogSets[Text].text.length - 1) {
+        IsDialog = false;
+        counter = 0;
+        Progress = 2;
+        console.log("Dialog Ende");
+      }
+    }
+    if (!IsDialog)
+      Movement(ProfessorMap, ProfessorTransperent, ProfessorCollision);
   }
 }
 
