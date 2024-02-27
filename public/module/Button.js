@@ -174,4 +174,3 @@ export function drawStoreButtons(c, canvas, Buttons, ButtonText, Set) {
     );
   }
 }
-

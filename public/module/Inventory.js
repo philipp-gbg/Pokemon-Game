@@ -13,12 +13,12 @@ export const PokemonList = {
     attacks: {
       Thunderbolt: {
         name: "Thunderbolt",
-        damage: 5,
+        damage: 10,
         quantity: 10,
       },
       Thunder: {
         name: "Thunder",
-        damage: 5,
+        damage: 15,
         quantity: 5,
       },
     },
@@ -118,7 +118,7 @@ export function fillInventory() {
       description: "A tool used to buy items",
       quantity: 500,
     },
-    Pokemon: [PokemonList.Pikashu, PokemonList.Glumanda],
+    Pokemon: [],
   };
   return Inventory;
 }
@@ -147,14 +147,17 @@ export function displayInventory(Player) {
     <div class="inventory-item-price">Preis: ${inventoryItemsValues[i].price}</div>
     </div>`;
   }
-  for (let i = 0; i < inventoryPokemonLength; i++) {
-    let attacks = Object.values(inventoryPokemonValues[i].attacks)
-      .map(
-        (attack) =>
-          `${attack.name} (Damage: ${attack.damage}, Quantity: ${attack.quantity})`
-      )
-      .join(", ");
-    inventoryPokemonHTML += `<div class="inventory-pokemon">
+  if (inventoryPokemonLength === 0) {
+    inventoryPokemonHTML = "Keine Pokemon im Inventar";
+  } else {
+    for (let i = 0; i < inventoryPokemonLength; i++) {
+      let attacks = Object.values(inventoryPokemonValues[i].attacks)
+        .map(
+          (attack) =>
+            `${attack.name} (Damage: ${attack.damage}, Quantity: ${attack.quantity})`
+        )
+        .join(", ");
+      inventoryPokemonHTML += `<div class="inventory-pokemon">
     <div class="inventory-pokemon-name"> ${inventoryPokemonValues[i].name}</div>
     <div class="inventory-pokemon-health">${inventoryPokemonValues[i].health}</div>
     <div class="inventory-pokemon-level">${inventoryPokemonValues[i].level}</div>
@@ -162,6 +165,7 @@ export function displayInventory(Player) {
     <div class="inventory-pokemon-image"><img src="${inventoryPokemonValues[i].src}"></div>
     <div class="inventory-pokemon-attacks">${attacks}</div>
     </div>`;
+    }
   }
   document.getElementById("inventory-items").innerHTML = inventoryItemsHTML;
   document.getElementById("inventory-pokemon").innerHTML = inventoryPokemonHTML;

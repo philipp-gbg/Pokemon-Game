@@ -12,7 +12,7 @@ const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 3;
+let Stage = 1;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -29,7 +29,7 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 5,
+  velocity: 10,
   src: PlayerDown,
   inventory: fillInventory(),
 });
@@ -44,11 +44,6 @@ import {
   drawStoreButtons,
   setupButtons,
 } from "./module/Button.js";
-let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
-  canvas,
-  Player,
-  selectedPokemon
-);
 
 let Set = 0;
 //Alle Laden Elemente
@@ -91,6 +86,16 @@ function createMap(Name, Position) {
     src: document.getElementById(Name),
   });
 }
+let { Buttons, ButtonText, currentPokemon, Attacks } = [];
+
+if (Progress >= 2) {
+  let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+    canvas,
+    Player,
+    selectedPokemon
+  );
+}
+
 const SpawnPosition = { x: -9130, y: -1990 };
 // const StorePositionIn = { x: -1430, y: -1560 };
 const StorePositionIn = { x: -1600, y: -1600 };
@@ -110,7 +115,7 @@ const ProfessorMap = createMap("ProfessorMap", ProfPositionIn);
 const ProfessorCollision = createMap("ProfessorCollision", ProfPositionIn);
 const ProfessorTransperent = createMap("ProfessorTransperent", ProfPositionIn);
 
-let Transistion = true;
+let Transistion = false;
 
 import {
   CollisionDetection,
@@ -128,6 +133,7 @@ const LeaveStage = [0, 255, 236, 255]; // TÜRKIS
 const EnterHouse = [253, 255, 0, 255]; // GELB
 const EnterStore = [255, 154, 0, 255]; // ORANGE
 const TalkingCollision = [255, 0, 255, 255]; // PINK
+const EnterProf = [0, 0, 255, 255]; // Blau
 
 //Spiel Loop
 function animate() {
@@ -322,13 +328,23 @@ function animate() {
         Transistion = false;
       }, 5000);
     }
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, EnterProf) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 3;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
+    }
 
     //Rest der Karte gezeichnet sowie der Spieler
     MainMap.draw();
 
     Player.draw(c, canvas);
     MainTransparent.draw();
-    // MainCollisions.draw();
+    MainCollisions.draw();
     if (IsDialog && counter < DialogSets[Text].text.length) {
       Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
         counter = newCounter;
@@ -451,7 +467,13 @@ function animate() {
         IsDialog = false;
         counter = 0;
         Progress = 2;
-        console.log("Dialog Ende");
+        Player.inventory.Pokemon.push({ ...Object.values(PokemonList)[0] });
+        displayInventory(Player);
+        ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+          canvas,
+          Player,
+          selectedPokemon
+        ));
       }
     }
     if (!IsDialog)
