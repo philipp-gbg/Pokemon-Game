@@ -12,7 +12,7 @@ const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 1;
+let Stage = 0;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -29,7 +29,7 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 10,
+  velocity: 5,
   src: PlayerDown,
   inventory: fillInventory(),
 });
@@ -78,7 +78,7 @@ let Text = 0;
 let counter = 0;
 let IsDialog = false;
 let isWaiting = false;
-let Progress = 1;
+let Progress = 0;
 //karten Setup
 function createMap(Name, Position) {
   return new MapConstructor({
@@ -101,6 +101,7 @@ const SpawnPosition = { x: -9130, y: -1990 };
 const StorePositionIn = { x: -1600, y: -1600 };
 const TalkingPosition = { x: -1430, y: -1560 };
 const ProfPositionIn = { x: -1150, y: -1460 };
+const MutterSpawn = { x: -1100, y: -1450 };
 
 const MainMap = createMap("Map", SpawnPosition);
 const MainTransparent = createMap("MapTransperent", SpawnPosition);
@@ -114,6 +115,10 @@ const LadenTransperent = createMap("LadenTransperent", StorePositionIn);
 const ProfessorMap = createMap("ProfessorMap", ProfPositionIn);
 const ProfessorCollision = createMap("ProfessorCollision", ProfPositionIn);
 const ProfessorTransperent = createMap("ProfessorTransperent", ProfPositionIn);
+
+const MutterMap = createMap("MutterMap", MutterSpawn);
+const MutterCollision = createMap("MutterCollision", MutterSpawn);
+const MutterTransperent = createMap("MutterTransperent", MutterSpawn);
 
 let Transistion = false;
 
@@ -300,11 +305,53 @@ function animate() {
     if (currentPokemon.health <= 0) {
       ShowMessage("Tot", "Du hast ein Pokemon verloren", c, canvas);
     }
+  } else if (Stage == 0) {
+    MutterCollision.draw();
+    ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
+      CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, LeaveStage) == true &&
+      Transistion == false
+    ) {
+      console.log("Transistion");
+      Transistion = true;
+      Stage = 1;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
+    }
+    if (
+      Progress == 0 &&
+      GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true
+    ) {
+      Player.src = PlayerRight;
+      Player.Stop();
+      Text = 1;
+      IsDialog = true;
+    }
+    MutterMap.draw();
+    Player.draw(c, canvas);
+    MutterTransperent.draw();
+    if (IsDialog && counter < DialogSets[Text].text.length) {
+      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
+        counter = newCounter;
+      });
+      if (counter >= DialogSets[Text].text.length - 1) {
+        IsDialog = false;
+        Progress = 1;
+        console.log("Dialog Ende");
+        setTimeout(function () {
+          counter = 0;
+        }, 7000);
+      }
+    }
+    if (!IsDialog) Movement(MutterMap, MutterTransperent, MutterCollision);
   } else if (Stage == 1) {
     MainCollisions.draw();
 
     //Collsions Erkennung
     if (
+      Progress == 2 &&
       PokemonEncounterFunction(LeftX, RightX, UpperY, frameCount, c) == true
     ) {
       getEnemyPokemon();
@@ -315,8 +362,15 @@ function animate() {
     }
     ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
       CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
-    if (GeneralCollision(LeftX, RightX, LowerY, c, EnterHouse) == true) {
-      console.log("Haus");
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, EnterHouse) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 0;
+      setTimeout(function () {
+        Transistion = false;
+      }, 5000);
     }
     if (
       GeneralCollision(LeftX, RightX, LowerY, c, EnterStore) == true &&
@@ -451,7 +505,7 @@ function animate() {
       GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true
     ) {
       Player.Stop();
-      Text = 3;
+      Text = 2;
       IsDialog = true;
     }
     ProfessorMap.draw();
@@ -465,15 +519,17 @@ function animate() {
       });
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
-        counter = 0;
         Progress = 2;
         Player.inventory.Pokemon.push({ ...Object.values(PokemonList)[0] });
         displayInventory(Player);
         ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
           canvas,
           Player,
-          selectedPokemon
+          selectedPokemonx
         ));
+        setTimeout(function () {
+          counter = 0;
+        }, 7000);
       }
     }
     if (!IsDialog)

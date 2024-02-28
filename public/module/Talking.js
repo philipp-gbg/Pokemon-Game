@@ -1,16 +1,5 @@
 export const DialogSets = {
   1: {
-    Name: ["Oak", "Player"],
-    text: [
-      "Welcome to the world of Pokemon!",
-      "My name is Oak! People call me the Pokemon Prof!",
-      "This world is inhabited by creatures called Pokemon!",
-      "For some people, Pokemon are pets. Others use them for fights.",
-      "Myself...I study Pokemon as a profession.",
-      "First, what is your name?",
-    ],
-  },
-  2: {
     Name: ["Mother", "Child"],
     text: [
       "I heard you talking about going out to enslave Pokémon. That sounds dangerous   and wrong. Why would you do that?",
@@ -26,7 +15,7 @@ export const DialogSets = {
       "",
     ],
   },
-  3: {
+  2: {
     Name: ["Professor", "Child"],
     text: [
       "So, you're interested in becoming a Pokémon Trainer? It's a path of great power and responsibility.",
@@ -39,6 +28,8 @@ export const DialogSets = {
       "I understand power might be needed, but I'll prove that kindness and            understanding can prevail.",
       "Very well. It's important to challenge our beliefs. Go, and see if your ideals  hold up in the real world.",
       "Thank you, Professor. I'll do my best and show you that Pokémon can be our      friends, not our servants.",
+      "Here take this Pikashu, it will serve you well.",
+      "Thanks Professeur, I'll take good care of it.",
       "",
     ],
   },
