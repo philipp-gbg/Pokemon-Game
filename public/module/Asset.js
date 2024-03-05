@@ -1,10 +1,11 @@
 const c = canvas.getContext("2d");
 
 export class MapConstructor {
-  constructor({ position, src }) {
+  constructor({ position, src, MapName }) {
     this.position = position;
     this.src = src;
     this.scale = 3;
+    this.name = MapName;
   }
   draw() {
     const width = this.src.width * this.scale;

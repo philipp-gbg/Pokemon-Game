@@ -35,7 +35,7 @@ export const DialogSets = {
   },
 };
 
-export function Dialog(counter, Text, c, canvas, isWaiting) {
+export function Dialog(counter, Text, c, canvas, isWaiting, DialogTime) {
   if (counter % 2 === 0) {
     TalkingBox(
       DialogSets[Text].Name[0],
@@ -59,7 +59,7 @@ export function Dialog(counter, Text, c, canvas, isWaiting) {
         counter++;
         isWaiting = false;
         resolve(counter);
-      }, 3000);
+      }, DialogTime);
     });
   }
   return Promise.resolve(counter);

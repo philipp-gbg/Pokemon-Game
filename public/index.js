@@ -7,12 +7,30 @@ import {
 
 import { Dialog, DialogSets, ShowMessage } from "./module/Talking.js";
 
+//Reset-Button
+const OpenModal = document.getElementById("open");
+const CloseModal = document.getElementById("close");
+const ResetButton = document.getElementById("realResetButton");
+//öffne Modal zum Bestätigen
+OpenModal.addEventListener("click", function () {
+  document.getElementById("modal").style.display = "flex";
+});
+//schließe Modal
+CloseModal.addEventListener("click", function () {
+  document.getElementById("modal").style.display = "none";
+});
+//Fortschritt zurücksetzen
+ResetButton.addEventListener("click", function () {
+  localStorage.clear();
+  location.reload();
+});
+
 // Canvas setup
 const canvas = document.querySelector("canvas");
 canvas.width = 1200;
 canvas.height = 800;
 canvas.style.imageRendering = "pixelated";
-let Stage = 0;
+let Stage = localStorage.getItem("Stage") || 0;
 const c = canvas.getContext("2d", { willReadFrequently: true });
 
 //Alle Spieler Elemente Laden
@@ -29,10 +47,13 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 5,
+  velocity: 10,
   src: PlayerDown,
   inventory: fillInventory(),
 });
+
+Player.inventory =
+  JSON.parse(localStorage.getItem("PlayerInventory")) || Player.inventory;
 displayInventory(Player);
 
 let selectedPokemon = 0;
@@ -65,6 +86,7 @@ let WinDone = false;
 let ItemDone = false;
 
 let Captured = false;
+let CaptureMessage = false;
 let Geflohen = 0;
 let Angriff = 0;
 let Item = 0;
@@ -78,34 +100,54 @@ let Text = 0;
 let counter = 0;
 let IsDialog = false;
 let isWaiting = false;
-let Progress = 0;
+let DialogTime = 100;
+
+let Progress = localStorage.getItem("Progress") || 0;
+
 //karten Setup
 function createMap(Name, Position) {
   return new MapConstructor({
     position: { ...Position },
     src: document.getElementById(Name),
+    MapName: Name,
   });
 }
 let { Buttons, ButtonText, currentPokemon, Attacks } = [];
 
 if (Progress >= 2) {
-  let { Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
+  console.log("Setup Buttons");
+  ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
     canvas,
     Player,
     selectedPokemon
-  );
+  ));
 }
 
-const SpawnPosition = { x: -9130, y: -1990 };
-// const StorePositionIn = { x: -1430, y: -1560 };
-const StorePositionIn = { x: -1600, y: -1600 };
-const TalkingPosition = { x: -1430, y: -1560 };
-const ProfPositionIn = { x: -1150, y: -1460 };
-const MutterSpawn = { x: -1100, y: -1450 };
+const MainMapPosition = JSON.parse(localStorage.getItem("Map")) || {
+  x: -9130,
+  y: -1990,
+};
 
-const MainMap = createMap("Map", SpawnPosition);
-const MainTransparent = createMap("MapTransperent", SpawnPosition);
-const MainCollisions = createMap("CollisionMap", SpawnPosition);
+const StorePositionIn = JSON.parse(localStorage.getItem("LadenMap")) || {
+  x: -1600,
+  y: -2500,
+};
+
+const StoreTalkingOut = { x: -1600, y: -1600 };
+
+const TalkingPosition = { x: -1430, y: -1560 };
+const ProfPositionIn = JSON.parse(localStorage.getItem("ProfessorMap")) || {
+  x: -1150,
+  y: -1460,
+};
+const MutterSpawn = JSON.parse(localStorage.getItem("MutterMap")) || {
+  x: -1100,
+  y: -1450,
+};
+
+const MainMap = createMap("Map", MainMapPosition);
+const MainTransparent = createMap("MapTransperent", MainMapPosition);
+const MainCollisions = createMap("CollisionMap", MainMapPosition);
 const KampfMap = createMap("KampfMap", { x: 0, y: 0 });
 
 const LadenMap = createMap("LadenMap", StorePositionIn);
@@ -121,6 +163,7 @@ const MutterCollision = createMap("MutterCollision", MutterSpawn);
 const MutterTransperent = createMap("MutterTransperent", MutterSpawn);
 
 let Transistion = false;
+let TransistionTime = 3000;
 
 import {
   CollisionDetection,
@@ -252,13 +295,19 @@ function animate() {
         }
       }
       if (Item == 1) {
+        if (CaptureMessage == false) {
+          Player.inventory.Items.pokeball.quantity--;
+          displayInventory(Player);
+          localStorage.setItem(
+            "PlayerInventory",
+            JSON.stringify(Player.inventory)
+          );
+        }
         if (Captured == true) {
           ShowMessage("Item", "Du hast ein Pokemon Gefangen", c, canvas);
-          Player.inventory.Items.pokeball.quantity--;
         }
         if (Captured == false && Player.inventory.Items.pokeball.quantity > 0) {
           ShowMessage("Item", "Du hast den Pokeball verfehlt", c, canvas);
-          Player.inventory.Items.pokeball.quantity--;
         } else if (Player.inventory.Items.pokeball.quantity == 0) {
           ShowMessage("Fehlgeschlagen", "Keine Pokebälle mehr", c, canvas);
         }
@@ -270,8 +319,8 @@ function animate() {
       } else if (Item == 2 && Player.inventory.Items.potion.quantity == 0) {
         ShowMessage("Fehlgeschlagen", "Keine Heiltränke mehr", c, canvas);
       }
-
       ItemDone = true;
+      CaptureMessage = true;
       setTimeout(function () {
         if (Item == 1 && Captured == false) {
           Turn = 1;
@@ -281,6 +330,8 @@ function animate() {
         }
         Item = 0;
         ItemDone = false;
+        CaptureMessage = false;
+        displayInventory(Player);
       }, 3000);
     }
 
@@ -316,9 +367,10 @@ function animate() {
       console.log("Transistion");
       Transistion = true;
       Stage = 1;
+      localStorage.setItem("Stage", 1);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
     if (
       Progress == 0 &&
@@ -333,12 +385,15 @@ function animate() {
     Player.draw(c, canvas);
     MutterTransperent.draw();
     if (IsDialog && counter < DialogSets[Text].text.length) {
-      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
-        counter = newCounter;
-      });
+      Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
+        (newCounter) => {
+          counter = newCounter;
+        }
+      );
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
         Progress = 1;
+        localStorage.setItem("Progress", 1);
         console.log("Dialog Ende");
         setTimeout(function () {
           counter = 0;
@@ -368,9 +423,10 @@ function animate() {
     ) {
       Transistion = true;
       Stage = 0;
+      localStorage.setItem("Stage", 0);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
     if (
       GeneralCollision(LeftX, RightX, LowerY, c, EnterStore) == true &&
@@ -378,9 +434,10 @@ function animate() {
     ) {
       Transistion = true;
       Stage = 2;
+      localStorage.setItem("Stage", 2);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
     if (
       GeneralCollision(LeftX, RightX, LowerY, c, EnterProf) == true &&
@@ -388,9 +445,10 @@ function animate() {
     ) {
       Transistion = true;
       Stage = 3;
+      localStorage.setItem("Stage", 3);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
 
     //Rest der Karte gezeichnet sowie der Spieler
@@ -400,9 +458,11 @@ function animate() {
     MainTransparent.draw();
     MainCollisions.draw();
     if (IsDialog && counter < DialogSets[Text].text.length) {
-      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
-        counter = newCounter;
-      });
+      Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
+        (newCounter) => {
+          counter = newCounter;
+        }
+      );
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
         counter = 0;
@@ -423,11 +483,15 @@ function animate() {
     ) {
       Transistion = true;
       Stage = 1;
+      localStorage.setItem("Stage", 1);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
-    if (GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true) {
+    if (
+      Progress >= 2 &&
+      GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true
+    ) {
       Talking = true;
       if (StoreSet == false) {
         Set = 6;
@@ -456,6 +520,10 @@ function animate() {
       if (BuyingNotificationPotion == false) {
         Player.inventory.Items.potion.quantity++;
         displayInventory(Player);
+        localStorage.setItem(
+          "PlayerInventory",
+          JSON.stringify(Player.inventory)
+        );
       }
       ShowMessage("Gekauft", "+1 Heilungstrank", c, canvas);
       BuyingNotificationPotion = true;
@@ -469,10 +537,13 @@ function animate() {
       if (BuyingNotificationBall == false) {
         Player.inventory.Items.pokeball.quantity++;
         displayInventory(Player);
+        localStorage.setItem(
+          "PlayerInventory",
+          JSON.stringify(Player.inventory)
+        );
       }
       ShowMessage("Gekauft", "+1 Pokeball", c, canvas);
       BuyingNotificationBall = true;
-
       setTimeout(function () {
         PokeballBought = false;
         BuyingNotificationBall = false;
@@ -484,8 +555,6 @@ function animate() {
         NotEnoughMoney = false;
       }, 3000);
     }
-
-    //LadenCollision.draw();
   } else if (Stage == 3) {
     ProfessorCollision.draw();
     ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
@@ -496,9 +565,10 @@ function animate() {
     ) {
       Transistion = true;
       Stage = 1;
+      localStorage.setItem("Stage", 1);
       setTimeout(function () {
         Transistion = false;
-      }, 5000);
+      }, TransistionTime);
     }
     if (
       Progress == 1 &&
@@ -514,18 +584,25 @@ function animate() {
     ProfessorTransperent.draw();
 
     if (IsDialog && counter < DialogSets[Text].text.length && Progress == 1) {
-      Dialog(counter, Text, c, canvas, isWaiting).then((newCounter) => {
-        counter = newCounter;
-      });
+      Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
+        (newCounter) => {
+          counter = newCounter;
+        }
+      );
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
         Progress = 2;
+        localStorage.setItem("Progress", 2);
         Player.inventory.Pokemon.push({ ...Object.values(PokemonList)[0] });
         displayInventory(Player);
+        localStorage.setItem(
+          "PlayerInventory",
+          JSON.stringify(Player.inventory)
+        );
         ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
           canvas,
           Player,
-          selectedPokemonx
+          selectedPokemon
         ));
         setTimeout(function () {
           counter = 0;
@@ -536,8 +613,6 @@ function animate() {
       Movement(ProfessorMap, ProfessorTransperent, ProfessorCollision);
   }
 }
-
-//Startet den Spiel Loop
 
 //Button Klick Erkennung
 canvas.addEventListener("mouseup", function (event) {
@@ -666,9 +741,9 @@ canvas.addEventListener("mouseup", function (event) {
     if (Set == 6) {
       if (Index == 0) {
         Talking = false;
-        LadenMap.position = { ...StorePositionIn };
-        LadenTransperent.position = { ...StorePositionIn };
-        LadenCollision.position = { ...StorePositionIn };
+        LadenMap.position = { ...StoreTalkingOut };
+        LadenTransperent.position = { ...StoreTalkingOut };
+        LadenCollision.position = { ...StoreTalkingOut };
         StoreSet = false;
       }
       if (Index == 1) {
@@ -676,6 +751,19 @@ canvas.addEventListener("mouseup", function (event) {
       }
       if (Index == 2) {
         Set = 8;
+      }
+      if (Index == 3) {
+        //heile alle Pokemon
+        for (let i = 0; i < Player.inventory.Pokemon.length; i++) {
+          Player.inventory.Pokemon[i].health =
+            Player.inventory.Pokemon[i].maxHealth;
+        }
+
+        displayInventory(Player);
+        localStorage.setItem(
+          "PlayerInventory",
+          JSON.stringify(Player.inventory)
+        );
       }
     } else if (Set == 7) {
       if (Index == 1) {
@@ -685,6 +773,10 @@ canvas.addEventListener("mouseup", function (event) {
           Player.inventory.Geld.quantity -= Player.inventory.Items.potion.price;
           displayInventory(Player);
           HeilungstrankBought = true;
+          localStorage.setItem(
+            "PlayerInventory",
+            JSON.stringify(Player.inventory)
+          );
         } else {
           NotEnoughMoney = true;
         }
@@ -702,6 +794,10 @@ canvas.addEventListener("mouseup", function (event) {
             Player.inventory.Items.pokeball.price;
           displayInventory(Player);
           PokeballBought = true;
+          localStorage.setItem(
+            "PlayerInventory",
+            JSON.stringify(Player.inventory)
+          );
         } else {
           NotEnoughMoney = true;
         }
@@ -799,16 +895,16 @@ function GainXP() {
   if (currentPokemon.xp >= currentPokemon.maxXP && currentPokemon.level < 100) {
     currentPokemon.xp = 0;
     currentPokemon.level++;
-    // currentPokemon.maxXP = currentPokemon.maxXP * 1.5;
-    currentPokemon.maxHealth =
-      ((currentPokemon.baseHealth + 7.5 + 113.14 / 8 + 50) *
-        currentPokemon.level) /
-        50 +
-      10;
-
+    currentPokemon.maxXP = Math.floor(currentPokemon.maxXP * 1.2);
+    currentPokemon.maxHealth = Math.floor(currentPokemon.maxHealth * 1.2);
+    currentPokemon.health = currentPokemon.maxHealth;
+    Attacks[0].damage = Math.floor(Attacks[0].damage * 1.2);
+    Attacks[1].damage = Math.floor(Attacks[1].damage * 1.2);
     console.log("Level Up");
     console.log(currentPokemon.maxHealth);
   }
+
+  localStorage.setItem("PlayerInventory", JSON.stringify(Player.inventory));
   return xp;
 }
 enemyPokemon = getEnemyPokemon();
@@ -832,6 +928,9 @@ function Damage(Attack, Enemy) {
     Attack = 0;
   }
   Enemy.health -= Attack;
+  if (Enemy.health < 0) {
+    Enemy.health = 0;
+  }
   return Attack;
 }
 animate();
@@ -846,6 +945,7 @@ function Capture(Health, MaxHealth) {
       selectedPokemon
     ));
     console.log("Pokemon Gefangen");
+    localStorage.setItem("PlayerInventory", JSON.stringify(Player.inventory));
     return true;
   } else {
     console.log("Pokemon konnte nicht Gefangen werden");
@@ -890,4 +990,5 @@ function Movement(Map, MapTransperent, CollisionMap) {
   if (currentDirection == null) {
     Player.Stop();
   }
+  localStorage.setItem(Map.name, JSON.stringify(Map.position));
 }

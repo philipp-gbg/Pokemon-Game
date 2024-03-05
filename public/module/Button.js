@@ -32,6 +32,12 @@ export function setupButtons(canvas, Player, selectedPokemon) {
   let Attacks = Object.values(currentPokemon.attacks);
   let Items = Object.values(Player.inventory.Items);
 
+  function getPokemonName(number) {
+    let pokemon =
+      Player.inventory.Pokemon[Object.keys(Player.inventory.Pokemon)[number]];
+    return pokemon && pokemon.name ? pokemon.name : "Kein Pokemon";
+  }
+
   let ButtonText = [
     {
       text: ["Flüchten", "Item", "Pokemon", "Angriff"],
@@ -45,29 +51,29 @@ export function setupButtons(canvas, Player, selectedPokemon) {
     {
       text: [
         "Raus",
-        "1." + Object.keys(Player.inventory.Pokemon)[0],
-        "2." + Object.keys(Player.inventory.Pokemon)[1],
+        "1." + getPokemonName(0),
+        "2." + getPokemonName(1),
         "Weiter",
       ],
     },
     {
       text: [
         "Zurück",
-        "3." + Object.keys(Player.inventory.Pokemon)[2],
-        "4." + Object.keys(Player.inventory.Pokemon)[3],
+        "3." + getPokemonName(2),
+        "4." + getPokemonName(3),
         "Weiter",
       ],
     },
     {
       text: [
         "Züruck",
-        "5." + Object.keys(Player.inventory.Pokemon)[4],
-        "6." + Object.keys(Player.inventory.Pokemon)[5],
+        "5." + getPokemonName(4),
+        "6." + getPokemonName(5),
         "Raus",
       ],
     },
     {
-      text: ["Gehen", "Heilungstrank", "Pokeball", ""],
+      text: ["Gehen", "Heilungstrank", "Pokeball", "Heilen"],
     },
     {
       text: ["Heilungstrank", "Kaufen", "Abbrechen", ""],
