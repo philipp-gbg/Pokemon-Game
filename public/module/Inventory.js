@@ -1,3 +1,4 @@
+// Liste aller Pokemon
 export const PokemonList = {
   Pikashu: {
     name: "Pikashu",
@@ -95,8 +96,105 @@ export const PokemonList = {
       },
     },
   },
+  Schiggy: {
+    name: "Schiggy",
+    health: 44,
+    maxHealth: 44,
+    baseHealth: 44,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 1,
+    type: "Water",
+    src: "",
+    attacks: {
+      WaterGun: {
+        name: "WaterGun",
+        damage: 10,
+        quantity: 10,
+      },
+      HydroPump: {
+        name: "HydroPump",
+        damage: 20,
+        quantity: 5,
+      },
+    },
+  },
+  Hornliu: {
+    name: "Hornliu",
+    health: 30,
+    maxHealth: 30,
+    baseHealth: 30,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 1,
+    type: "Bug",
+    src: "",
+    attacks: {
+      Tackle: {
+        name: "Tackle",
+        damage: 10,
+        quantity: 10,
+      },
+      PoisonSting: {
+        name: "PoisonSting",
+        damage: 15,
+        quantity: 5,
+      },
+    },
+  },
+  Taubsi: {
+    name: "Taubsi",
+    health: 40,
+    maxHealth: 40,
+    baseHealth: 40,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 1,
+    type: "Flying",
+    src: "",
+    attacks: {
+      Peck: {
+        name: "Peck",
+        damage: 10,
+        quantity: 10,
+      },
+      WingAttack: {
+        name: "WingAttack",
+        damage: 15,
+        quantity: 5,
+      },
+    },
+  },
+  Raupy: {
+    name: "Raupy",
+    health: 20,
+    maxHealth: 20,
+    baseHealth: 20,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 1,
+    type: "Bug",
+    src: "",
+    attacks: {
+      Tackle: {
+        name: "Tackle",
+        damage: 10,
+        quantity: 10,
+      },
+      StringShot: {
+        name: "StringShot",
+        damage: 15,
+        quantity: 5,
+      },
+    },
+  },
 };
 
+// befülle das Standart Inventar
 export function fillInventory() {
   const Inventory = {
     Items: {
@@ -123,6 +221,7 @@ export function fillInventory() {
   return Inventory;
 }
 
+// Zeige das Inventar an und fülle es mit den Items und Pokemon / ist ganz viel HTML, nicht wundern mache Klassen wurden nicht benutzt
 export function displayInventory(Player) {
   let inventory = Player.inventory;
   let inventoryItems = inventory.Items;
@@ -152,16 +251,12 @@ export function displayInventory(Player) {
   } else {
     for (let i = 0; i < inventoryPokemonLength; i++) {
       let attacks = Object.values(inventoryPokemonValues[i].attacks)
-        .map(
-          (attack) =>
-            `${attack.name} (Damage: ${attack.damage}, Quantity: ${attack.quantity})`
-        )
-        .join(", ");
+        .map((attack) => ` ${attack.name}  Schaden: ${attack.damage}`)
+        .join("<br>");
       inventoryPokemonHTML += `<div class="inventory-pokemon">
     <div class="inventory-pokemon-name"> ${inventoryPokemonValues[i].name}</div>
-    <div class="inventory-pokemon-health">${inventoryPokemonValues[i].health}</div>
-    <div class="inventory-pokemon-level">${inventoryPokemonValues[i].level}</div>
-    <div class="inventory-pokemon-type">${inventoryPokemonValues[i].type}</div>
+    <div class="inventory-pokemon-health">Health: ${inventoryPokemonValues[i].health} / ${inventoryPokemonValues[i].maxHealth}</div>
+    <div class="inventory-pokemon-level">Level: ${inventoryPokemonValues[i].level} / 100</div>
     <div class="inventory-pokemon-image"><img src="${inventoryPokemonValues[i].src}"></div>
     <div class="inventory-pokemon-attacks">${attacks}</div>
     </div>`;

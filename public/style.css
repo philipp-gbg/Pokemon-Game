@@ -1,3 +1,4 @@
+/* Hier ist nur Design, wenn ich jetzt anfange das zu erklären schreibe ich nen 1000 Wörter aufsatz und das will glaube niemand :) */
 body {
   display: flex;
   justify-content: center;
@@ -15,6 +16,16 @@ body {
   grid-column-gap: 0px;
   grid-row-gap: 0px;
   padding: 0;
+}
+
+.inventory-pokemon {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 20px;
+  margin: 10px;
+  border: 1px solid black;
+  border-radius: 10px;
 }
 
 .inventory-item-name {

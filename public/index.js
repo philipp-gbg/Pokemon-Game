@@ -39,6 +39,7 @@ const PlayerUp = document.getElementById("PlayerUp");
 const PlayerLeft = document.getElementById("PlayerLeft");
 const PlayerRight = document.getElementById("PlayerRight");
 
+//Den Spieler erstellen und die Position setzen
 let directionStack = [];
 const Player = new PlayerConstructor({
   position: {
@@ -47,16 +48,17 @@ const Player = new PlayerConstructor({
       y: canvas.height / 2 - 68 / 2,
     },
   },
-  velocity: 10,
+  velocity: 7,
   src: PlayerDown,
   inventory: fillInventory(),
 });
 
+// Das Inventar des Spielers aus dem LocalStorage laden
 Player.inventory =
   JSON.parse(localStorage.getItem("PlayerInventory")) || Player.inventory;
 displayInventory(Player);
 
-let selectedPokemon = 0;
+// Alle Kollisions Elemente Laden
 let { CollisionDown, CollisionLeft, CollisionRight, CollisionUP } = false;
 
 //Alle UI Elemente Laden
@@ -65,8 +67,8 @@ import {
   drawStoreButtons,
   setupButtons,
 } from "./module/Button.js";
-
 let Set = 0;
+
 //Alle Laden Elemente
 let Talking = false;
 let StoreSet = false;
@@ -77,6 +79,7 @@ let BuyingNotificationBall = false;
 let NotEnoughMoney = false;
 
 //Alle Kampf Elemente
+let selectedPokemon = 0;
 let enemyPokemon = {};
 let XpMessage = 0;
 let Schaden = 0;
@@ -92,6 +95,7 @@ let Angriff = 0;
 let Item = 0;
 let Turn = 0;
 let PokemonKampf = false;
+
 //Frame Counter für die Pokemon Encounter Erkennung
 let frameCount = 1;
 
@@ -100,8 +104,9 @@ let Text = 0;
 let counter = 0;
 let IsDialog = false;
 let isWaiting = false;
-let DialogTime = 100;
+let DialogTime = 5000;
 
+// Den Fortschritt des Spielers aus dem LocalStorage laden
 let Progress = localStorage.getItem("Progress") || 0;
 
 //karten Setup
@@ -115,7 +120,6 @@ function createMap(Name, Position) {
 let { Buttons, ButtonText, currentPokemon, Attacks } = [];
 
 if (Progress >= 2) {
-  console.log("Setup Buttons");
   ({ Buttons, ButtonText, currentPokemon, Attacks } = setupButtons(
     canvas,
     Player,
@@ -123,6 +127,7 @@ if (Progress >= 2) {
   ));
 }
 
+//Alle Karten Positionen aus dem LocalStorage laden oder, falls nicht vorhanden, setzen
 const MainMapPosition = JSON.parse(localStorage.getItem("Map")) || {
   x: -9130,
   y: -1990,
@@ -145,6 +150,12 @@ const MutterSpawn = JSON.parse(localStorage.getItem("MutterMap")) || {
   y: -1450,
 };
 
+const BossPosition = JSON.parse(localStorage.getItem("BossMap")) || {
+  x: -1450,
+  y: -1900,
+};
+
+//Alle Karten erstellen
 const MainMap = createMap("Map", MainMapPosition);
 const MainTransparent = createMap("MapTransperent", MainMapPosition);
 const MainCollisions = createMap("CollisionMap", MainMapPosition);
@@ -162,6 +173,11 @@ const MutterMap = createMap("MutterMap", MutterSpawn);
 const MutterCollision = createMap("MutterCollision", MutterSpawn);
 const MutterTransperent = createMap("MutterTransperent", MutterSpawn);
 
+const BossMap = createMap("BossMap", BossPosition);
+const BossCollision = createMap("BossCollision", BossPosition);
+const BossTransperent = createMap("BossTransperent", BossPosition);
+
+//Die Übergangs Zeit setzen
 let Transistion = false;
 let TransistionTime = 3000;
 
@@ -171,25 +187,30 @@ import {
   PokemonEncounterFunction,
 } from "./module/Collision.js";
 
+// Die Kollisions Punkte festlegen
 const LeftX = canvas.width / 2 - 14;
 const UpperY = canvas.height / 2 - 52;
 const RightX = canvas.width / 2 + 52;
 const LowerY = canvas.height / 2 + 2;
 
-//Alle Kolliosions Farben
+// Alle Kolliosions Farben
 const LeaveStage = [0, 255, 236, 255]; // TÜRKIS
 const EnterHouse = [253, 255, 0, 255]; // GELB
 const EnterStore = [255, 154, 0, 255]; // ORANGE
 const TalkingCollision = [255, 0, 255, 255]; // PINK
 const EnterProf = [0, 0, 255, 255]; // Blau
+const EnterBoss = [132, 94, 194, 255]; //Lila
 
-//Spiel Loop
+// Spiel Loop
 function animate() {
   window.requestAnimationFrame(animate);
+  //Bild löschen
   c.clearRect(0, 0, canvas.width, canvas.height);
   if (PokemonKampf == true) {
     Player.Stop();
     if (Stage == 1) {
+      KampfMap.draw();
+    } else if (Stage == 4) {
       KampfMap.draw();
     }
     Player.src = PlayerUp;
@@ -203,7 +224,7 @@ function animate() {
       currentPokemon,
       enemyPokemon
     );
-
+    // Flucht Logik
     if (Geflohen == 2) {
       ShowMessage("Flucht", "Du bist erfolgreich geflüchtet", c, canvas);
       setTimeout(function () {
@@ -218,7 +239,7 @@ function animate() {
         Turn = 1;
       }, 3000);
     }
-
+    //Kampf Logik
     if (Turn == 1 && enemyPokemon.health > 0 && currentPokemon.health > 0) {
       let EnemyAttacks = Object.values(enemyPokemon.attacks);
       if (EnemyDone == false) {
@@ -249,7 +270,7 @@ function animate() {
         EnemyDone = false;
       }, 3000);
     }
-
+    //Eigener Angriff
     if (Turn == 0 && Angriff != 0) {
       if (OwnDone == false) {
         Schaden = Damage(Attacks[Angriff - 1].damage, enemyPokemon);
@@ -271,7 +292,7 @@ function animate() {
         OwnDone = false;
       }, 3000);
     }
-
+    //Falls der Spieler ein Item benutzt
     if (Turn == 0 && Item != 0) {
       if (ItemDone == false) {
         if (
@@ -337,8 +358,13 @@ function animate() {
 
     if (enemyPokemon.health <= 0) {
       if (WinDone == false) {
-        console.log("Du hast gewonnen");
         XpMessage = GainXP();
+        Player.inventory.Geld.quantity += 100;
+        displayInventory(Player);
+        localStorage.setItem(
+          "PlayerInventory",
+          JSON.stringify(Player.inventory)
+        );
       }
       ShowMessage(
         "Du hast gewonnen",
@@ -364,7 +390,6 @@ function animate() {
       GeneralCollision(LeftX, RightX, LowerY, c, LeaveStage) == true &&
       Transistion == false
     ) {
-      console.log("Transistion");
       Transistion = true;
       Stage = 1;
       localStorage.setItem("Stage", 1);
@@ -384,6 +409,7 @@ function animate() {
     MutterMap.draw();
     Player.draw(c, canvas);
     MutterTransperent.draw();
+    // Dialog Logik
     if (IsDialog && counter < DialogSets[Text].text.length) {
       Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
         (newCounter) => {
@@ -394,17 +420,17 @@ function animate() {
         IsDialog = false;
         Progress = 1;
         localStorage.setItem("Progress", 1);
-        console.log("Dialog Ende");
         setTimeout(function () {
           counter = 0;
         }, 7000);
       }
     }
+    //Bewegungs Logik
     if (!IsDialog) Movement(MutterMap, MutterTransperent, MutterCollision);
   } else if (Stage == 1) {
     MainCollisions.draw();
 
-    //Collsions Erkennung
+    //Collsions Erkennung, sollte nun eignt klar sein wie's geht, ansontsen siehe Collision.js
     if (
       Progress == 2 &&
       PokemonEncounterFunction(LeftX, RightX, UpperY, frameCount, c) == true
@@ -450,6 +476,18 @@ function animate() {
         Transistion = false;
       }, TransistionTime);
     }
+    if (
+      Progress == 2 &&
+      GeneralCollision(LeftX, RightX, LowerY, c, EnterBoss) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 4;
+      localStorage.setItem("Stage", 4);
+      setTimeout(function () {
+        Transistion = false;
+      }, TransistionTime);
+    }
 
     //Rest der Karte gezeichnet sowie der Spieler
     MainMap.draw();
@@ -465,15 +503,13 @@ function animate() {
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
         counter = 0;
-        console.log("Dialog Ende");
       }
     }
     if (!IsDialog) Movement(MainMap, MainTransparent, MainCollisions);
   } else if (Stage == 2) {
     LadenCollision.draw();
 
-    //Collsions Erkennung
-
+    //Collsions Erkennung, sollte nun eignt klar sein wie's geht, ansontsen siehe Collision.js
     ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
       CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
     if (
@@ -503,18 +539,18 @@ function animate() {
     Player.draw(c, canvas);
     LadenTransperent.draw();
 
+    // Store Logik
     if (Talking == true) {
       LadenMap.position = { ...TalkingPosition };
       LadenTransperent.position = { ...TalkingPosition };
       LadenCollision.position = { ...TalkingPosition };
       Player.src = PlayerUp;
       Player.Stop();
-
       drawStoreButtons(c, canvas, Buttons, ButtonText, Set);
     } else {
       Movement(LadenMap, LadenTransperent, LadenCollision);
     }
-
+    // Einkaufs Logik für die Items
     if (HeilungstrankBought == true) {
       if (BuyingNotificationPotion == false) {
         Player.inventory.Items.potion.quantity++;
@@ -610,6 +646,52 @@ function animate() {
     }
     if (!IsDialog)
       Movement(ProfessorMap, ProfessorTransperent, ProfessorCollision);
+  } else if (Stage == 4) {
+    BossCollision.draw();
+    ({ CollisionUP, CollisionDown, CollisionLeft, CollisionRight } =
+      CollisionDetection(LeftX, RightX, UpperY, LowerY, c));
+    if (
+      GeneralCollision(LeftX, RightX, LowerY, c, LeaveStage) == true &&
+      Transistion == false
+    ) {
+      Transistion = true;
+      Stage = 1;
+      localStorage.setItem("Stage", 1);
+      setTimeout(function () {
+        Transistion = false;
+      }, TransistionTime);
+    }
+    if (
+      Progress == 2 &&
+      GeneralCollision(LeftX, RightX, LowerY, c, TalkingCollision) == true
+    ) {
+      Player.Stop();
+      Text = 3;
+      IsDialog = true;
+    }
+    BossMap.draw();
+    Player.draw(c, canvas);
+    BossTransperent.draw();
+    if (IsDialog && counter < DialogSets[Text].text.length) {
+      Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
+        (newCounter) => {
+          counter = newCounter;
+        }
+      );
+      if (counter >= DialogSets[Text].text.length - 1) {
+        IsDialog = false;
+        counter = 0;
+        PokemonKampf = true;
+        Set = 0;
+        frameCount = 0;
+        Turn = 0;
+        Player.Stop();
+        BossMap.position = BossPosition;
+        BossTransperent.position = BossPosition;
+        BossCollision.position = BossPosition;
+      }
+    }
+    if (!IsDialog) Movement(BossMap, BossTransperent, BossCollision);
   }
 }
 
@@ -617,6 +699,7 @@ function animate() {
 canvas.addEventListener("mouseup", function (event) {
   let Index = getClickedButtonIndex(event);
   if (PokemonKampf == true && Turn == 0) {
+    // Jeder Satz hat 4 Buttons, also 4 Fälle (Index 0-3) siehe Button.js
     if (Set == 0) {
       if (Index == 0) {
         Escape();
@@ -629,33 +712,26 @@ canvas.addEventListener("mouseup", function (event) {
       }
       if (Index == 3) {
         Set = 1;
-        console.log("Angiff 1");
       }
     } else if (Set == 1) {
       if (Index == 1 && currentPokemon.health > 0) {
-        console.log("Angiff 1");
         Angriff = 1;
       }
       if (Index == 2 && currentPokemon.health > 0) {
-        console.log("Angiff 2");
         Angriff = 2;
       }
       if (Index == 3) {
         Set = 0;
-        console.log("Zurück");
       }
     } else if (Set == 2) {
       if (Index == 1) {
-        console.log("Item 1");
         Item = 1;
       }
       if (Index == 2) {
-        console.log("Item 2");
         Item = 2;
       }
       if (Index == 3) {
         Set = 0;
-        console.log("Zurück");
       }
     } else if (Set == 3) {
       if (Index == 0) {
@@ -736,6 +812,7 @@ canvas.addEventListener("mouseup", function (event) {
       }
     }
   }
+  // Falls die Person sich im Laden befindet und auf einen Button klickt
   if (Talking == true) {
     if (Set == 6) {
       if (Index == 0) {
@@ -863,6 +940,7 @@ function getCurrentDirection() {
   return directionStack[directionStack.length - 1] || null;
 }
 
+// Gibt den Index des Buttons zurück, auf den geklickt wurde
 function getClickedButtonIndex() {
   let rect = canvas.getBoundingClientRect();
   let x = event.clientX - rect.left;
@@ -883,14 +961,16 @@ function getClickedButtonIndex() {
   return -1;
 }
 
+// Ziehe ein zufälliges Pokemon gegen welches gekäumpft wird
 function getEnemyPokemon() {
-  let randomPokemon = Math.floor(Math.random() * 3 + 1);
+  let randomPokemon = Math.floor(Math.random() * 7 + 1);
   return (enemyPokemon = { ...Object.values(PokemonList)[randomPokemon] });
 }
-
+// Erhöhe die XP des Pokemons
 function GainXP() {
   let xp = Math.floor(Math.random() * 10);
   currentPokemon.xp += xp;
+  // Level Up Logik
   if (currentPokemon.xp >= currentPokemon.maxXP && currentPokemon.level < 100) {
     currentPokemon.xp = 0;
     currentPokemon.level++;
@@ -899,15 +979,14 @@ function GainXP() {
     currentPokemon.health = currentPokemon.maxHealth;
     Attacks[0].damage = Math.floor(Attacks[0].damage * 1.2);
     Attacks[1].damage = Math.floor(Attacks[1].damage * 1.2);
-    console.log("Level Up");
-    console.log(currentPokemon.maxHealth);
   }
-
+  // Speichere das Inventar des Spielers
   localStorage.setItem("PlayerInventory", JSON.stringify(Player.inventory));
   return xp;
 }
 enemyPokemon = getEnemyPokemon();
 
+// Flucht Logik
 function Escape() {
   if (Math.floor(Math.random() * 10) >= 3 || currentPokemon.health <= 0) {
     Geflohen = 2;
@@ -916,8 +995,10 @@ function Escape() {
   }
 }
 
+// Schadens Logik
 function Damage(Attack, Enemy) {
   if (Math.random() * 10 <= 9) {
+    // Kritischer Treffer berechnen (20% Chance)
     if (Math.random() * 10 <= 2) {
       Attack = Math.floor(Attack * 1.2);
     } else {
@@ -932,9 +1013,11 @@ function Damage(Attack, Enemy) {
   }
   return Attack;
 }
+// Starte den SpielLoop
 animate();
-
+// Einfangen eines Pokemons
 function Capture(Health, MaxHealth) {
+  // 30% Chance ein Pokemon zu fangen wenn das gegnerische Pokemon unter 50% HP ist
   if (Math.random() * 10 <= 30 && Health / MaxHealth <= 0.5) {
     Player.inventory.Pokemon.push({ ...enemyPokemon });
     displayInventory(Player);
@@ -943,15 +1026,14 @@ function Capture(Health, MaxHealth) {
       Player,
       selectedPokemon
     ));
-    console.log("Pokemon Gefangen");
+
     localStorage.setItem("PlayerInventory", JSON.stringify(Player.inventory));
     return true;
   } else {
-    console.log("Pokemon konnte nicht Gefangen werden");
     return false;
   }
 }
-
+// Bewegungs Logik die Karte bewegt sich und nicht der Spieler so wird die Illusion der Bewegung erstellt ohne eine "Kamere" mit zu bewegen
 function Movement(Map, MapTransperent, CollisionMap) {
   let currentDirection = getCurrentDirection();
   if (currentDirection == "UP" && CollisionUP == false) {

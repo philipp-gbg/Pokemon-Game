@@ -7,6 +7,7 @@ export class MapConstructor {
     this.scale = 3;
     this.name = MapName;
   }
+  // Die Map zeichnen
   draw() {
     const width = this.src.width * this.scale;
     const height = this.src.height * this.scale;
@@ -23,6 +24,7 @@ export class PokemonConstructor {
     this.attacks = attacks;
     this.src = src;
   }
+  // Das Pokemon zeichnen
   draw(positionX, positionY) {
     c.drawImage(this.src, positionX, positionY);
   }
@@ -36,11 +38,11 @@ export class PlayerConstructor {
     this.inventory = inventory;
     this.frameIndex = 0;
     this.speed = 5;
-    this.animationSpeed = 5; // Change this value to control animation speed
-    this.direction = { x: 0, y: 0 }; // No movement initially
-    this.frameCount = 0; // Add this line
+    this.animationSpeed = 5;
+    this.direction = { x: 0, y: 0 };
+    this.frameCount = 0;
   }
-
+  // Den Spieler zeichnen
   draw(c, canvas, fight) {
     const Scale = 1.5;
     const frameWidth = this.src.width / 4;
@@ -71,15 +73,16 @@ export class PlayerConstructor {
       );
     }
   }
-
+  // Den Spieler bewegen
   move() {
     this.position.x += this.direction.x * this.speed;
     this.position.y += this.direction.y * this.speed;
-    this.frameCount++; // Increment frameCount
+    this.frameCount++;
     if (this.frameCount % this.animationSpeed === 0) {
-      this.frameIndex = (this.frameIndex + 1) % 4; // Loop back to 0 after reaching the last frame
+      this.frameIndex = (this.frameIndex + 1) % 4;
     }
   }
+  //Den Spieler und seine Animations stoppen
   Stop() {
     this.frameIndex = 0;
   }

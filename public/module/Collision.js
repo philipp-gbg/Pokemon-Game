@@ -3,17 +3,17 @@ const Wand = [255, 0, 0, 255]; // ROT
 const PokemonEncounter = [0, 255, 0, 255]; // GRÜN
 
 export function Collision(line, targetColor, c) {
-  // Determine the step size based on the length of the line
+  // Schrittweite für die Kollisionsabfrage (Performance)
   const step = Math.max(1, Math.floor(line.length / 1000));
-
+  // Iteriere über die Linie
   for (let i = 0; i < line.length; i += step) {
     const point = line[i];
     let x = point[0];
     let y = point[1];
 
-    // Get the image data for the current pixel
+    // Speichere die Farbe des Pixels
     let pixelData = c.getImageData(x, y, 1, 1).data;
-
+    //  Vergleiche die Farbe des Pixels mit der Ziel-Farbe
     if (pixelData.toString() === targetColor.toString()) {
       return true;
     }
@@ -61,7 +61,7 @@ export function GeneralCollision(LeftX, RightX, LowerY, c, targetColor) {
   }
   return false;
 }
-
+// Kollisionsabfrage für die Wand und die Kollision mit dem Spieler
 export function CollisionDetection(LeftX, RightX, UpperY, LowerY, c) {
   let CollisionUP = Collision(
     [
@@ -95,6 +95,6 @@ export function CollisionDetection(LeftX, RightX, UpperY, LowerY, c) {
     Wand,
     c
   );
-
+  // Rückgabe der Kollisionserkennung
   return { CollisionUP, CollisionDown, CollisionLeft, CollisionRight };
 }

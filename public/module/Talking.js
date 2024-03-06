@@ -1,3 +1,4 @@
+// Alle Texte für die Dialoge
 export const DialogSets = {
   1: {
     Name: ["Mother", "Child"],
@@ -33,9 +34,24 @@ export const DialogSets = {
       "",
     ],
   },
+  3: {
+    Name: ["Boss", "Child"],
+    text: [
+      "So, you've come far, young Trainer. You've shown great skill and determination.",
+      "Yes, I've trained hard and formed strong bonds with my Pokémon. I'm ready for   anything.",
+      "Are you truly ready, though? You've shown kindness and strength, but the world  is cruel and unforgiving.",
+      "I've seen the world's cruelty, but I've also seen its beauty. I'm ready to face  anything, no matter how tough.",
+      "Very well. I'll test your resolve. Are you ready to face the ultimate challenge?",
+      "I'm ready. I'll show you the power of friendship and trust. I'll show you that   Pokémon and humans can be equals.",
+      "Very well. Let's begin.",
+      "",
+    ],
+  },
 };
 
+// Dialog Funktion
 export function Dialog(counter, Text, c, canvas, isWaiting, DialogTime) {
+  // Tausche den Namen alle 2 Texte
   if (counter % 2 === 0) {
     TalkingBox(
       DialogSets[Text].Name[0],
@@ -54,6 +70,7 @@ export function Dialog(counter, Text, c, canvas, isWaiting, DialogTime) {
 
   if (!isWaiting) {
     isWaiting = true;
+    // Warte DialogTime Sekunden bis zum nächsten Text
     return new Promise((resolve) => {
       setTimeout(function () {
         counter++;
@@ -65,6 +82,7 @@ export function Dialog(counter, Text, c, canvas, isWaiting, DialogTime) {
   return Promise.resolve(counter);
 }
 
+// Zeige eine Nachricht an, ist nur Zeichnen keine wirkliche Logik
 export function TalkingBox(Heading, Message, c, canvas) {
   if (Message.length > 80) {
     let Message1 = Message.slice(0, 80);
@@ -93,7 +111,7 @@ export function TalkingBox(Heading, Message, c, canvas) {
     c.fillText(Message, 30, canvas.height - 90);
   }
 }
-
+// gleiche hier
 export function ShowMessage(Heading, Message, c, canvas) {
   c.fillStyle = "white";
   c.fillRect(canvas.width / 2 - 250, canvas.height / 2 - 150, 500, 100);
