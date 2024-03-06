@@ -456,7 +456,6 @@ function animate() {
 
     Player.draw(c, canvas);
     MainTransparent.draw();
-    MainCollisions.draw();
     if (IsDialog && counter < DialogSets[Text].text.length) {
       Dialog(counter, Text, c, canvas, isWaiting, DialogTime).then(
         (newCounter) => {
