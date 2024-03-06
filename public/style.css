@@ -47,7 +47,6 @@ body {
 }
 
 .reset-button {
-  margin-top: 20px;
   padding: 10px;
   border-radius: 10px;
   border: white 1px solid;
@@ -57,7 +56,6 @@ body {
   font-weight: bold;
 }
 .cancel-button {
-  margin-top: 20px;
   padding: 10px;
   border-radius: 10px;
   border: white 1px solid;
@@ -87,5 +85,11 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  align-items: center;
+}
+
+.heading {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
 }

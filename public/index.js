@@ -94,7 +94,7 @@ let Geflohen = 0;
 let Angriff = 0;
 let Item = 0;
 let Turn = 0;
-let PokemonKampf = false;
+let PokemonFight = false;
 
 //Frame Counter für die Pokemon Encounter Erkennung
 let frameCount = 1;
@@ -206,7 +206,7 @@ function animate() {
   window.requestAnimationFrame(animate);
   //Bild löschen
   c.clearRect(0, 0, canvas.width, canvas.height);
-  if (PokemonKampf == true) {
+  if (PokemonFight == true) {
     Player.Stop();
     if (Stage == 1) {
       KampfMap.draw();
@@ -229,7 +229,7 @@ function animate() {
       ShowMessage("Flucht", "Du bist erfolgreich geflüchtet", c, canvas);
       setTimeout(function () {
         Turn = 0;
-        PokemonKampf = false;
+        PokemonFight = false;
         Geflohen = 0;
       }, 3000);
     } else if (Geflohen == 1) {
@@ -346,7 +346,7 @@ function animate() {
         if (Item == 1 && Captured == false) {
           Turn = 1;
         } else {
-          PokemonKampf = false;
+          PokemonFight = false;
           Captured = false;
         }
         Item = 0;
@@ -374,7 +374,7 @@ function animate() {
       );
       WinDone = true;
       setTimeout(function () {
-        PokemonKampf = false;
+        PokemonFight = false;
         WinDone = false;
       }, 5000);
     }
@@ -436,7 +436,7 @@ function animate() {
       PokemonEncounterFunction(LeftX, RightX, UpperY, frameCount, c) == true
     ) {
       getEnemyPokemon();
-      PokemonKampf = true;
+      PokemonFight = true;
       Set = 0;
       frameCount = 0;
       Turn = 0;
@@ -681,7 +681,8 @@ function animate() {
       if (counter >= DialogSets[Text].text.length - 1) {
         IsDialog = false;
         counter = 0;
-        PokemonKampf = true;
+        PokemonFight = true;
+        enemyPokemon = { ...Object.values(PokemonList)[8] };
         Set = 0;
         frameCount = 0;
         Turn = 0;
@@ -698,7 +699,7 @@ function animate() {
 //Button Klick Erkennung
 canvas.addEventListener("mouseup", function (event) {
   let Index = getClickedButtonIndex(event);
-  if (PokemonKampf == true && Turn == 0) {
+  if (PokemonFight == true && Turn == 0) {
     // Jeder Satz hat 4 Buttons, also 4 Fälle (Index 0-3) siehe Button.js
     if (Set == 0) {
       if (Index == 0) {
@@ -1011,6 +1012,8 @@ function Damage(Attack, Enemy) {
   if (Enemy.health < 0) {
     Enemy.health = 0;
   }
+  localStorage.setItem("PlayerInventory", JSON.stringify(Player.inventory));
+  displayInventory(Player);
   return Attack;
 }
 // Starte den SpielLoop

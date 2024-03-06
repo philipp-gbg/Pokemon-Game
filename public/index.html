@@ -44,25 +44,27 @@
         Hier wird das Inventar angezeigt
       -->
     <div class="inventory">
-        <h1>Inventar</h1>
-        <div id="inventory-money"></div>
+        <div class="heading">
+            <h1>Inventory</h1>
+            <button class="reset-button" id="open">Reset</button>
+        </div>
+        <h3 id="inventory-money"></h3>
         <ul class="inventory-items" id="inventory-items"></ul>
         <div id="inventory-pokemon"></div>
-        <button class="reset-button" id="open">Reset</button>
     </div>
     <!-- 
         Hier wird das Menü angezeigt mit welchem man das Spiel zurücksetzen kann
      -->
     <div class="modal" id="modal">
         <div class="modal-box">
-            <h2>Bist du dir Wirklich sicher?</h2>
+            <h2>Are you realy sure?</h2>
             <p>
-                Du wirst alle deine Pokemons verlieren und das Spiel wird zurückgesetzt.
+                You will lose all your progress and have to start from the beginning.
             </p>
             <div>
-                <button class="cancel-button" id="close"> Abbrechen </button>
+                <button class="cancel-button" id="close"> Cancel </button>
                 <button class="reset-button" id="realResetButton">
-                    Zurücksetzen
+                    Reset
                 </button>
             </div>
         </div>

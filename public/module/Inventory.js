@@ -192,6 +192,30 @@ export const PokemonList = {
       },
     },
   },
+  BossPokemon: {
+    name: "BossPokemon",
+    health: 200,
+    maxHealth: 200,
+    baseHealth: 200,
+    xp: 0,
+    maxXP: 30,
+    baseXP: 30,
+    level: 10,
+    type: "Boss",
+    src: "",
+    attacks: {
+      BossAttack: {
+        name: "BadGrade",
+        damage: 30,
+        quantity: 10,
+      },
+      BossAttack2: {
+        name: "UnfairExam",
+        damage: 40,
+        quantity: 5,
+      },
+    },
+  },
 };
 
 // befülle das Standart Inventar
@@ -200,13 +224,13 @@ export function fillInventory() {
     Items: {
       pokeball: {
         name: "Pokeball",
-        description: "Wird benutzt um Pokemon zu fangen",
+        description: "Used to catch Pokemon",
         quantity: 5,
         price: 200,
       },
       potion: {
         name: "Heilungstrank",
-        description: "Wird benutzt um Pokemon zu heilen",
+        description: "Is used to heal Pokemon",
         quantity: 5,
         price: 200,
       },
@@ -247,7 +271,7 @@ export function displayInventory(Player) {
     </div>`;
   }
   if (inventoryPokemonLength === 0) {
-    inventoryPokemonHTML = "Keine Pokemon im Inventar";
+    inventoryPokemonHTML = "You have no Pokemon in your inventory.";
   } else {
     for (let i = 0; i < inventoryPokemonLength; i++) {
       let attacks = Object.values(inventoryPokemonValues[i].attacks)
@@ -257,6 +281,7 @@ export function displayInventory(Player) {
     <div class="inventory-pokemon-name"> ${inventoryPokemonValues[i].name}</div>
     <div class="inventory-pokemon-health">Health: ${inventoryPokemonValues[i].health} / ${inventoryPokemonValues[i].maxHealth}</div>
     <div class="inventory-pokemon-level">Level: ${inventoryPokemonValues[i].level} / 100</div>
+    <div class="inventory-pokemon-type">XP: ${inventoryPokemonValues[i].xp} / ${inventoryPokemonValues[i].maxXP}</div>
     <div class="inventory-pokemon-image"><img src="${inventoryPokemonValues[i].src}"></div>
     <div class="inventory-pokemon-attacks">${attacks}</div>
     </div>`;
